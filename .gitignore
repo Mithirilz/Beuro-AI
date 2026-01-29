@@ -1,0 +1,12 @@
+.env
+build
+.cache
+.vscode
+DBBeuro
+Memory.txt
+History.txt
+Beuro-prompts
+.clangd
+DPP
+chromadb-cpp
+dotenv-cpp
