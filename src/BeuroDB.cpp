@@ -1,37 +1,45 @@
 #include <SQLiteCpp/SQLiteCpp.h>
+#include <fstream>
+#include <dotenv.h>
 #include <iostream>
 
+std::vector<std::string> ReadFromFile();
+
 int main(){
-    const std::string FILEPATH = "C:/Users/ASUS/Documents/Visual Studio Code/Discord Bot/DBBeuro/Beuro_ChatHistory.db"; 
+    dotenv::init();
+    const std::string FILEPATH = dotenv::getenv("FILEPATH", "None");
     SQLite::Database BeuroDB(FILEPATH, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
+}
 
-    BeuroDB.exec("CREATE TABLE IF NOT EXISTS ChatHistory (MessageID INTEGER PRIMARY KEY, Message TEXT); ");
-
-    SQLite::Statement insert(BeuroDB, "INSERT Into ChatHistory (Message) VALUES(?);");
-
-    std::vector<std::string> msg = {"Hi there Beuro", "How you doing?", "Yep, been doing fine", "I got a question for ya"};
-
-    for (const std::string& messages : msg){
-        insert.bind(1, messages);
-        insert.exec();
-        insert.reset();
+std::vector<std::string> ReadFromFile(){
+    std::string message;
+    std::ifstream memory("Memory.txt");
+    
+    if(!memory.is_open()){
+        std::cout << "Unable to open the file" << std::endl;
     }
+    
+    std::vector<std::string> chats = {};
+    
+    while(std::getline(memory, message)){
+        if(message == ""){
+            continue;
+        }
         
-
-    SQLite::Statement select(BeuroDB, "SELECT MessageID, Message FROM ChatHistory;");
-
-    while(select.executeStep()){
-        int ID = select.getColumn(0);
-        std::string message = select.getColumn(1);
-
-        std::cout << ID << " : " << message << std::endl;
+        chats.emplace_back(message);
+        std::cout << message << std::endl;        
     }
+
+    memory.close();
+
+    return chats;
 }
 
 /*
 1. Set up database *
 2. Send some test data *
 3. Try to query the data *
-4. Prepare test data for co-query with ChromaDB
+4. Prepare test data for co-query with ChromaDB *
 5. Try to query data via chromaDB
+    - Get data to be organised correctly into blocks first
 */

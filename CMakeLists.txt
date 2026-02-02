@@ -56,6 +56,7 @@ target_link_libraries(ChromaCLI PRIVATE
 
 target_link_libraries(BeuroDB PRIVATE
     SQLiteCpp
+    dotenv
 )
 
 target_include_directories(Beuro PRIVATE 

@@ -1,5 +1,6 @@
 #include <Http/httplib.h>
 #include <ChromaDB/ChromaDB.h>
+#include <chrono>
 #include <functional>
 #include <fstream>
 #include <iostream>
@@ -11,6 +12,7 @@ std::vector<std::string> ReadFromFile();
 std::string DoesCollectionExist(chromadb::Client& beuroDB);
 std::string UpdateCollection(chromadb::Client& beuroDB);
 std::string GetEmbeddingFromCollection(chromadb::Client& beuroDB);
+std::string QueryData(chromadb::Client& beuroDB);
 
 int main(){
     chromadb::Client beuroDB("http", "127.0.0.1", "8080"); 
@@ -21,7 +23,8 @@ int main(){
     function[2] = [&beuroDB](){return DoesCollectionExist(beuroDB);};
     function[3] = [&beuroDB](){return UpdateCollection(beuroDB);};
     function[4] = [&beuroDB](){return GetEmbeddingFromCollection(beuroDB);};
-    
+    function[5] = [&beuroDB](){return QueryData(beuroDB);};
+
     int decision = 0;
 
     std::cout << "--- USER INTERFACE ---" << std::endl;
@@ -29,6 +32,7 @@ int main(){
     std::cout << "2. Does collection exist?" << std::endl;
     std::cout << "3. Update collection" << std::endl;
     std::cout << "4. Get embedding from collection" << std::endl;
+    std::cout << "5. Query Data" << std::endl;
     std::cout << "What would you like to do: ";
     std::cin >> decision;
 
@@ -118,4 +122,28 @@ std::string GetEmbeddingFromCollection(chromadb::Client& beuroDB){
     }
 
     return "This function successfully executed.";
+}
+
+std::string QueryData(chromadb::Client& beuroDB){
+    std::vector<std::chrono::duration<double>> calculated_time;
+
+    auto timer_start = std::chrono::high_resolution_clock::now();
+    std::shared_ptr<chromadb::LocalOllamaEmbeddingFunction> OllamaEmbeddingFunction = std::make_shared<chromadb::LocalOllamaEmbeddingFunction>("127.0.0.1:11434", "nomic-embed-text");
+
+    chromadb::Collection collection = beuroDB.GetCollection("ChatHistory", OllamaEmbeddingFunction);
+
+    auto embeds = OllamaEmbeddingFunction->Generate({"Remember that ready player one book you talked about?"});
+    auto results = beuroDB.Query(collection, {}, embeds, 3);
+
+    for (int i = 0; i < results.size(); i++){
+        for (int j = 0; j < results[i].ids.size(); j++){
+            std::cout << "IDs: " << results[i].ids.at(j) << std::endl;
+        }
+    }
+
+    auto timer_end = std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<double> timed = timer_end - timer_start;
+
+    return "Function has executed successfully.";
 }
