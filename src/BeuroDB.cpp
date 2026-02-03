@@ -5,8 +5,7 @@
 #include <unordered_map>
 #include <vector>
 
-
-class Database_Actions{
+class SQL_Execs{
     private:
         std::vector<int> IDs = {};
         std::vector<std::string> chat_content = {};
@@ -75,7 +74,7 @@ int main(){
     const std::string FILEPATH = dotenv::getenv("FILEPATH", "None");
     
     SQLite::Database BeuroDB(FILEPATH, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
-    Database_Actions DB;
+    SQL_Execs DB;
 
     int decision = 0;
 
@@ -103,13 +102,3 @@ int main(){
 
     actions[decision]();
 }
-
-/*
-1. Set up database *
-2. Send some test data *
-3. Try to query the data *
-4. Prepare test data for co-query with ChromaDB *
-5. Test data query from ChromaDB
-6. Try to query data via chromaDB
-    - Get data to be organised correctly into blocks first
-*/
