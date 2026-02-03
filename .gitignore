@@ -7,8 +7,9 @@ Memory.txt
 History.txt
 Beuro-prompts
 .clangd
+Tasks
+
+#Other REPOs used to make this project
 DPP
 chromadb-cpp
 dotenv-cpp
-Tasks
-.gitignore
