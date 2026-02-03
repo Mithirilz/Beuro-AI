@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 
+std::string DisplayMemory_to_Store();
 std::string AddEmbedIntoCollection(chromadb::Client& beuroDB);
 std::vector<std::string> ReadFromFile();
 std::string DoesCollectionExist(chromadb::Client& beuroDB);
@@ -24,6 +25,7 @@ int main(){
     function[3] = [&beuroDB](){return UpdateCollection(beuroDB);};
     function[4] = [&beuroDB](){return GetEmbeddingFromCollection(beuroDB);};
     function[5] = [&beuroDB](){return QueryData(beuroDB);};
+    function[6] = [](){return DisplayMemory_to_Store();};
 
     int decision = 0;
 
@@ -33,6 +35,7 @@ int main(){
     std::cout << "3. Update collection" << std::endl;
     std::cout << "4. Get embedding from collection" << std::endl;
     std::cout << "5. Query Data" << std::endl;
+    std::cout << "6. Display memory to store" << std::endl;
     std::cout << "What would you like to do: ";
     std::cin >> decision;
 
@@ -40,6 +43,24 @@ int main(){
     
     return 0;
 }    
+
+std::string DisplayMemory_to_Store(){
+    int counter = 1;
+    std::vector<std::string> chats = ReadFromFile();
+
+    for(int i = 0; i < chats.size(); i+=2){
+        std::string ID = "ID" + std::to_string(counter);
+        std::string temp_msg = chats[i] + "\n" + chats[i+1];
+        
+        std::cout << ID << std::endl;
+        std::cout << temp_msg << std::endl << std::endl;
+        
+        counter = counter + 1;
+    }
+
+    return "Function executed successfully.";
+}
+
 
 std::string AddEmbedIntoCollection(chromadb::Client& beuroDB){
     std::cout << beuroDB.GetHeartbeat() << std::endl;
@@ -144,6 +165,7 @@ std::string QueryData(chromadb::Client& beuroDB){
     auto timer_end = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<double> timed = timer_end - timer_start;
-
+    std::cout << timed << std::endl;
+    
     return "Function has executed successfully.";
 }

@@ -40,6 +40,7 @@ std::vector<std::string> ReadFromFile(){
 2. Send some test data *
 3. Try to query the data *
 4. Prepare test data for co-query with ChromaDB *
-5. Try to query data via chromaDB
+5. Test data query from ChromaDB
+6. Try to query data via chromaDB
     - Get data to be organised correctly into blocks first
 */
