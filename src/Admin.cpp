@@ -1,6 +1,5 @@
 #include <Http/httplib.h>
 #include <ChromaDB/ChromaDB.h>
-#include <chrono>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -106,7 +105,7 @@ class ChromaDB_Execs {
             return "This function successfully executed.";
         }
 
-        std::string QueryData(chromadb::Client& beuroDB){
+        std::string QueryData(chromadb::Client& beuroDB, const std::vector<std::string>& query_data){
             std::vector<std::chrono::duration<double>> calculated_time;
 
             auto timer_start = std::chrono::high_resolution_clock::now();
@@ -114,8 +113,8 @@ class ChromaDB_Execs {
 
             chromadb::Collection collection = beuroDB.GetCollection("ChatHistory", OllamaEmbeddingFunction);
 
-            auto embeds = OllamaEmbeddingFunction->Generate({"Remember that ready player one book you talked about?"});
-            auto results = beuroDB.Query(collection, {}, embeds, 3);
+            auto embeds = OllamaEmbeddingFunction->Generate(query_data);
+            auto results = beuroDB.Query(collection, {}, embeds, 1);
 
             for (int i = 0; i < results.size(); i++){
                 for (int j = 0; j < results[i].ids.size(); j++){

@@ -7,8 +7,10 @@ Memory.txt
 History.txt
 Beuro-prompts
 .clangd
+Backup
 
 #Other REPOs used to make this project
 DPP
 chromadb-cpp
 dotenv-cpp
+SQLiteCpp
