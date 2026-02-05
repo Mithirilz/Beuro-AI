@@ -1,7 +1,6 @@
 #include <Http/httplib.h>
 #include <ChromaDB/ChromaDB.h>
 #include <chrono>
-#include <functional>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -16,15 +15,13 @@ class ChromaDB_Execs {
             std::cout << beuroDB.GetHeartbeat() << std::endl;
 
             int counter = 1;
-            
-            std::vector<std::string> chats = ReadFromFile();
 
             std::vector<std::string> chat_set = {};
             std::vector<std::string> IDs = {};
             
-            for(int i = 0; i < chats.size(); i+=2){
+            for(int i = 0; i < this->chats.size(); i+=2){
                 std::string ID = "ID" + std::to_string(counter);
-                std::string temp_msg = chats[i] + "\n" + chats[i+1];
+                std::string temp_msg = this->chats[i] + "\n" + this->chats[i+1];
                 
                 std::cout << ID << std::endl;
                 std::cout << temp_msg << std::endl << std::endl;
@@ -47,11 +44,10 @@ class ChromaDB_Execs {
 
         std::string DisplayMemory_to_Store(){
             int counter = 1;
-            std::vector<std::string> chats = ReadFromFile();
 
-            for(int i = 0; i < chats.size(); i+=2){
+            for(int i = 0; i < this->chats.size(); i+=2){
                 std::string ID = "ID" + std::to_string(counter);
-                std::string temp_msg = chats[i] + "\n" + chats[i+1];
+                std::string temp_msg = this->chats[i] + "\n" + this->chats[i+1];
                 
                 std::cout << ID << std::endl;
                 std::cout << temp_msg << std::endl << std::endl;
@@ -134,34 +130,4 @@ class ChromaDB_Execs {
             
             return "Function has executed successfully.";
         }
-};
-
-
-int main(){
-    chromadb::Client beuroDB("http", "127.0.0.1", "8080"); 
-    ChromaDB_Execs exec; 
-
-    std::unordered_map<int, std::function<std::string()>> function;
-    function[1] = [&beuroDB, &exec](){return exec.AddEmbedIntoCollection(beuroDB);};
-    function[2] = [&beuroDB, &exec](){return exec.DoesCollectionExist(beuroDB);};
-    function[3] = [&beuroDB, &exec](){return exec.UpdateCollection(beuroDB);};
-    function[4] = [&beuroDB, &exec](){return exec.GetEmbeddingFromCollection(beuroDB);};
-    function[5] = [&beuroDB, &exec](){return exec.QueryData(beuroDB);};
-    function[6] = [&exec](){return exec.DisplayMemory_to_Store();};
-
-    int decision = 0;
-
-    std::cout << "--- USER INTERFACE ---" << std::endl;
-    std::cout << "1. Add embed into Collection" << std::endl;
-    std::cout << "2. Does collection exist?" << std::endl;
-    std::cout << "3. Update collection" << std::endl;
-    std::cout << "4. Get embedding from collection" << std::endl;
-    std::cout << "5. Query Data" << std::endl;
-    std::cout << "6. Display memory to store" << std::endl;
-    std::cout << "What would you like to do: ";
-    std::cin >> decision;
-
-    std::cout << function[decision]() << std::endl;
-    
-    return 0;
-}    
+};    

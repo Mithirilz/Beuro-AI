@@ -1,8 +1,6 @@
 #include <SQLiteCpp/SQLiteCpp.h>
 #include <dotenv.h>
-#include <functional>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 class SQL_Execs{
@@ -61,7 +59,7 @@ class SQL_Execs{
                 auto ID = execution.getColumn(0);
                 auto result = execution.getColumn(1);
                 
-                std::cout << ID << "|" << result << std::endl;
+                std::cout << ID << "|" << result << std::endl << std::endl;
             }
         }
 
@@ -75,56 +73,20 @@ class SQL_Execs{
                     auto ID_result = execution.getColumn(0);
                     auto result = execution.getColumn(1);
                     
-                    std::cout << ID_result << "|" << result << std::endl;
+                    std::cout << ID_result << "|" << result << std::endl << std::endl;
                 }
 
                 execution.reset();
             }
         }
+
+        void ChangeDataType(std::string& ID){
+            auto search_result = ID.find("ID");
+
+            std::string cleaned_copy = ID.erase(search_result, 2);
+
+            int ID_number = std::stoi(cleaned_copy);
+            std::cout << ID_number << std::endl;
+        }
+ 
 };
-
-int main(){
-    dotenv::init();
-    const std::string FILEPATH = dotenv::getenv("FILEPATH", "None");
-    
-    SQLite::Database BeuroDB(FILEPATH, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
-    SQL_Execs DB;
-    
-    int decision = 0;
-    
-    enum decisions{
-        Create_Table = 1,
-        Prepare_Data = 2,
-        Insert_Data = 3,
-        Get_all_data = 4,
-        Search_data = 5,
-        Exit_Program = 6
-    };
-
-    bool is_on = true; 
-    
-    std::unordered_map<int, std::function<void()>> actions;
-    actions[Create_Table] = [&BeuroDB, &DB](){DB.CreateTable(BeuroDB);};
-    actions[Prepare_Data] = [&DB](){DB.ReadFromFile();};
-    actions[Insert_Data] = [&BeuroDB, &DB](){DB.InsertDataintoTable(BeuroDB);};
-    actions[Get_all_data] = [&BeuroDB, &DB](){DB.QueryAllInformation(BeuroDB);};
-    actions[Search_data] = [&BeuroDB, &DB](){DB.QueryTargettedData(BeuroDB);}; 
-    actions[Exit_Program] = [&is_on](){is_on = false;};
-    
-
-    while(is_on){
-        std::cout << "---- USER INTERFACE ----" << std::endl;
-        std::cout << "1. Create Table" << std::endl;
-        std::cout << "2. Prepare Data" << std::endl;
-        std::cout << "3. Insert Data" << std::endl;
-        std::cout << "4. Get all data in table" << std::endl;
-        std::cout << "5. Search data in table" << std::endl;
-        std::cout << "6. Exit the program" << std::endl;
-        
-        std::cout << "What would you like to do? (1-6): ";
-        std::cin >> decision;
-        
-        actions[decision]();
-        std::cout << std::endl << std::endl;
-    }
-}
