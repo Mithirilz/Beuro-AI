@@ -7,7 +7,7 @@
 
 class SQL_Execs{
     private:
-        std::vector<int> IDs = {};
+        std::vector<int> ID_targets = {1, 12};
         std::vector<std::string> chat_content = {};
 
     public:
@@ -15,12 +15,24 @@ class SQL_Execs{
             beuroDB.exec("CREATE TABLE IF NOT EXISTS ChatHistory (ID INTEGER, CONTENT TEXT);");
         }
 
-        void push_into_IDs(int& ID){
-            this->IDs.push_back(ID);
-        }
+        void ReadFromFile(){
+        std::string message;
+            std::ifstream memory("Memory.txt");
+            
+            if(!memory.is_open()){
+                std::cout << "Unable to open the file" << std::endl;
+            }
+            
+            while(std::getline(memory, message)){
+                if(message == ""){
+                    continue;
+                }
+                
+                this->chat_content.emplace_back(message);
+                std::cout << message << std::endl;        
+            }
 
-        void push_into_chatcontent(std::string& chat){
-            this->chat_content.push_back(chat);
+            memory.close();
         }
 
         void InsertDataintoTable(SQLite::Database& beuroDB){
@@ -44,25 +56,27 @@ class SQL_Execs{
 
         void QueryAllInformation(SQLite::Database& beuroDB){
             SQLite::Statement execution(beuroDB, "SELECT * FROM ChatHistory");
+            
             while(execution.executeStep()){
-                auto ID = execution.getColumn(1);
-                auto result = execution.getColumn(2);
+                auto ID = execution.getColumn(0);
+                auto result = execution.getColumn(1);
                 
                 std::cout << ID << "|" << result << std::endl;
             }
         }
 
-        void QuerySpecificInformation(SQLite::Database& beuroDB){
+        void QueryTargettedData(SQLite::Database& beuroDB){
             SQLite::Statement execution(beuroDB, "SELECT * FROM ChatHistory WHERE ID = ?");
 
-            for (const auto& ID : this->IDs){
+            for (const auto& ID : this->ID_targets){
                 execution.bind(1, ID);
-                execution.exec();
-
-                auto ID_result = execution.getColumn(1);
-                auto result = execution.getColumn(2);
                 
-                std::cout << ID_result << "|" << result << std::endl;
+                while(execution.executeStep()){
+                    auto ID_result = execution.getColumn(0);
+                    auto result = execution.getColumn(1);
+                    
+                    std::cout << ID_result << "|" << result << std::endl;
+                }
 
                 execution.reset();
             }
@@ -75,30 +89,42 @@ int main(){
     
     SQLite::Database BeuroDB(FILEPATH, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
     SQL_Execs DB;
-
+    
     int decision = 0;
-
+    
     enum decisions{
         Create_Table = 1,
-        Insert_Data = 2,
-        Get_all_data = 3,
-        Search_data = 4
+        Prepare_Data = 2,
+        Insert_Data = 3,
+        Get_all_data = 4,
+        Search_data = 5,
+        Exit_Program = 6
     };
 
+    bool is_on = true; 
+    
     std::unordered_map<int, std::function<void()>> actions;
-    actions[Create_Table] = [&BeuroDB, &DB](){DB.CreateTable(BeuroDB);}; 
-    actions[Insert_Data] = [&BeuroDB, &DB](){DB.InsertDataintoTable(BeuroDB);}; 
-    actions[Get_all_data] = [&BeuroDB, &DB](){DB.QueryAllInformation(BeuroDB);}; 
-    actions[Search_data] = [&BeuroDB, &DB](){DB.QuerySpecificInformation(BeuroDB);}; 
+    actions[Create_Table] = [&BeuroDB, &DB](){DB.CreateTable(BeuroDB);};
+    actions[Prepare_Data] = [&DB](){DB.ReadFromFile();};
+    actions[Insert_Data] = [&BeuroDB, &DB](){DB.InsertDataintoTable(BeuroDB);};
+    actions[Get_all_data] = [&BeuroDB, &DB](){DB.QueryAllInformation(BeuroDB);};
+    actions[Search_data] = [&BeuroDB, &DB](){DB.QueryTargettedData(BeuroDB);}; 
+    actions[Exit_Program] = [&is_on](){is_on = false;};
+    
 
-    std::cout << "---- USER INTERFACE ----" << std::endl;
-    std::cout << "1. Create Table" << std::endl;
-    std::cout << "2. Insert Data" << std::endl;
-    std::cout << "3. Get all data in table" << std::endl;
-    std::cout << "4. Search data in table" << std::endl;
-    std::cout << "What would you like to do? (1-4)" << std::endl;
-
-    std::cin >> decision;
-
-    actions[decision]();
+    while(is_on){
+        std::cout << "---- USER INTERFACE ----" << std::endl;
+        std::cout << "1. Create Table" << std::endl;
+        std::cout << "2. Prepare Data" << std::endl;
+        std::cout << "3. Insert Data" << std::endl;
+        std::cout << "4. Get all data in table" << std::endl;
+        std::cout << "5. Search data in table" << std::endl;
+        std::cout << "6. Exit the program" << std::endl;
+        
+        std::cout << "What would you like to do? (1-6): ";
+        std::cin >> decision;
+        
+        actions[decision]();
+        std::cout << std::endl << std::endl;
+    }
 }
