@@ -7,7 +7,7 @@
 void debugger(const dpp::slashcommand_t &event);
 dpp::task<void> owner_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro);
 dpp::task<void> general_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro);
-dpp::task<void> sleep();
+dpp::task<void> delay();
 
 int main() {
     dotenv::init();
@@ -238,7 +238,7 @@ dpp::task<void> owner_message_commands(const dpp::message_create_t& event, dpp::
 
     else if(event.msg.content.find("Beuro shutdown") != std::string::npos){
         co_await event.co_reply("Shutting down in 5 seconds...");
-        co_await sleep();
+        co_await delay();
         beuro.shutdown();
     }
 }
@@ -253,7 +253,7 @@ dpp::task<void> general_message_commands(const dpp::message_create_t& event, dpp
     }
 }
 
-dpp::task<void> sleep(){
+dpp::task<void> delay(){
     std::this_thread::sleep_for(std::chrono::seconds(5));
     co_return;
 }
