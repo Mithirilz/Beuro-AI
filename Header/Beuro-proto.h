@@ -15,7 +15,7 @@ class ChromaDB_Execs {
         std::string DoesCollectionExist(chromadb::Client& beuroDB);
         std::string UpdateCollection(chromadb::Client& beuroDB);
         std::string GetEmbeddingFromCollection(chromadb::Client& beuroDB);
-        std::string QueryData(chromadb::Client& beuroDB);
+        std::string QueryData(chromadb::Client& beuroDB, const std::vector<std::string>& query_data);
 };
 
 class SQL_Execs{
