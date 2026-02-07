@@ -1,19 +1,13 @@
 #include <SQLiteCpp/SQLiteCpp.h>
 #include <dotenv.h>
 #include <string>
-#include <vector>
+#include "Proto/Beuro-proto.h"
 
-class SQL_Execs{
-    private:
-        std::vector<int> ID_targets = {1, 12};
-        std::vector<std::string> chat_content = {};
-
-    public:
-        void CreateTable(SQLite::Database& beuroDB){
-            beuroDB.exec("CREATE TABLE IF NOT EXISTS ChatHistory (ID INTEGER, CONTENT TEXT);");
+        void SQL_Execs::CreateTable(){
+            BeuroDB.exec("CREATE TABLE IF NOT EXISTS ChatHistory (ID INTEGER, CONTENT TEXT);");
         }
 
-        void ReadFromFile(){
+        void SQL_Execs::ReadFromFile(){
         std::string message;
             std::ifstream memory("Memory.txt");
             
@@ -33,8 +27,8 @@ class SQL_Execs{
             memory.close();
         }
 
-        void InsertDataintoTable(SQLite::Database& beuroDB){
-            SQLite::Statement execution(beuroDB, "INSERT INTO ChatHistory (ID, CONTENT) VALUES (?, ?);");
+        void SQL_Execs::InsertDataintoTable(){
+            SQLite::Statement execution(BeuroDB, "INSERT INTO ChatHistory (ID, CONTENT) VALUES (?, ?);");
             int counter = 1;
 
             for (const auto& chats : this->chat_content){
@@ -52,8 +46,8 @@ class SQL_Execs{
             std::cout << "Last ID entered (Or amount of messages in the database): " << counter << std::endl;
         }
 
-        void QueryAllInformation(SQLite::Database& beuroDB){
-            SQLite::Statement execution(beuroDB, "SELECT * FROM ChatHistory");
+        void SQL_Execs::QueryAllInformation(){
+            SQLite::Statement execution(BeuroDB, "SELECT * FROM ChatHistory");
             
             while(execution.executeStep()){
                 auto ID = execution.getColumn(0);
@@ -63,8 +57,8 @@ class SQL_Execs{
             }
         }
 
-        void QueryTargettedData(SQLite::Database& beuroDB){
-            SQLite::Statement execution(beuroDB, "SELECT * FROM ChatHistory WHERE ID = ?");
+        void SQL_Execs::QueryTargettedData(){
+            SQLite::Statement execution(BeuroDB, "SELECT * FROM ChatHistory WHERE ID = ?");
 
             for (const auto& ID : this->ID_targets){
                 execution.bind(1, ID);
@@ -80,7 +74,7 @@ class SQL_Execs{
             }
         }
 
-        void ChangeDataType(std::string& ID){
+        void SQL_Execs::ChangeDataType(std::string& ID){
             auto search_result = ID.find("ID");
 
             std::string cleaned_copy = ID.erase(search_result, 2);
@@ -89,4 +83,3 @@ class SQL_Execs{
             std::cout << ID_number << std::endl;
         }
  
-};

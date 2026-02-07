@@ -118,6 +118,9 @@ class ChromaDB_Execs {
             auto embeds = OllamaEmbeddingFunction->Generate({"Remember that ready player one book you talked about?"});
             auto results = beuroDB.Query(collection, {}, embeds, 3);
 
+            std::cout << results.size() << std::endl;
+            std::cout << results[0].ids.size() << std::endl;
+
             for (int i = 0; i < results.size(); i++){
                 for (int j = 0; j < results[i].ids.size(); j++){
                     std::cout << "IDs: " << results[i].ids.at(j) << std::endl;

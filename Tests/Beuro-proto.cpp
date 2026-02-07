@@ -1,14 +1,16 @@
-#include <ChromaDB/ChromaDB.h>
 #include <SQLiteCpp/SQLiteCpp.h>
-#include "Beuro-proto.h"
+#include <ChromaDB/ChromaDB.h>
+#include "Proto/Beuro-proto.h"
+#include <Http/httplib.h>
+#include <dotenv.h>
 
 int main(){
-    SQL_Execs sqlexec;
-    ChromaDB_Execs chromaexec;
-
-    chromadb::Client BeuroDB("http", "127.0.0.1", "8080");
+    dotenv::init();
     
+    SQL_Execs sqlexec(dotenv::getenv("FILEPATH"));
+    ChromaDB_Execs chromaexec("http", "127.0.0.1", "8080"); 
 
-    //Classes are severely hard to understand, refactor imminent   
-    std::cout << chromaexec.QueryData(BeuroDB, {"Beuro you wanna talk about ready player one?"}) << std::endl;
+    std::cout << chromaexec.GetAllEmbeddingsFromCollection("ChatHistory") << std::endl;
+
+    return 0;
 }

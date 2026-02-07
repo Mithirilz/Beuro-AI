@@ -1,7 +1,7 @@
 #include <dpp/dpp.h>
 #include <chrono>
 #include <dotenv.h>
-#include "BeuroAI.h"
+#include "Beuro/BeuroAI.h"
 
 
 void debugger(const dpp::slashcommand_t &event);

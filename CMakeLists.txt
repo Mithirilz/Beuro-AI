@@ -56,9 +56,9 @@ target_link_libraries(BeuroDB PRIVATE
 )
 
 target_link_libraries(Beuro-proto PRIVATE
-    SQLiteCpp
     OpenSSL::SSL
     OpenSSL::Crypto
+    SQLiteCpp
     chromadb
     dotenv
 )
