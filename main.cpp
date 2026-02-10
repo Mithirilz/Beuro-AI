@@ -5,19 +5,22 @@
 
 
 void debugger(const dpp::slashcommand_t &event);
-dpp::task<void> owner_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro);
-dpp::task<void> general_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro);
+dpp::task<void> owner_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro, BeuroAI& beuro_exec);
+dpp::task<void> general_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro, BeuroAI& beuro_exec);
 dpp::task<void> delay();
 
 int main() {
     dotenv::init();
-    std::string BOT_TOKEN= dotenv::getenv("BOT_TOKEN", "None");
-
-    if (BOT_TOKEN == "None"){
-        std::cout << "Token is not valid" << std::endl;
+    const std::string BOT_TOKEN = dotenv::getenv("BOT_TOKEN", "None");
+    const std::string FILEPATH = dotenv::getenv("FILEPATH", "None");
+    const std::string PORT = dotenv::getenv("PORT", "None");
+    
+    if (BOT_TOKEN == "None" || FILEPATH == "None" || PORT == "None"){
+        std::cout << "One of the Env's are not valid" << std::endl;
         return 0;
     }
-
+    
+    BeuroAI beuro_exec(FILEPATH, PORT);
     dpp::cluster beuro(BOT_TOKEN, dpp::i_default_intents | dpp::i_message_content);
 
     beuro.on_log(dpp::utility::cout_logger());
@@ -204,14 +207,14 @@ int main() {
         }
     });
 
-    beuro.on_message_create([&beuro](const dpp::message_create_t& event) -> dpp::task<void> {
+    beuro.on_message_create([&beuro, &beuro_exec](const dpp::message_create_t& event) -> dpp::task<void> {
         if (event.msg.author.id == 640069711341813763){
-            co_await owner_message_commands(event, beuro);
+            co_await owner_message_commands(event, beuro, beuro_exec);
             co_return;
         }
         
         else{
-            co_await general_message_commands(event, beuro);
+            co_await general_message_commands(event, beuro, beuro_exec);
             co_return;
         }
     });
@@ -230,9 +233,9 @@ int main() {
     beuro.start(dpp::st_wait);
 }
 
-dpp::task<void> owner_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro){
+dpp::task<void> owner_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro, BeuroAI& beuro_exec){
     if(event.msg.content.find("<@" + std::to_string(beuro.me.id) + ">") != std::string::npos || event.msg.is_dm()) {
-        co_await Beuro_Response(event.msg.content, event, beuro);
+        co_await beuro_exec.Beuro_Response(event.msg.content, event, beuro);
         co_return;
     }
 
@@ -243,9 +246,9 @@ dpp::task<void> owner_message_commands(const dpp::message_create_t& event, dpp::
     }
 }
 
-dpp::task<void> general_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro){
+dpp::task<void> general_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro, BeuroAI& beuro_exec){
     if(event.msg.content.find("<@" + std::to_string(beuro.me.id) + ">") != std::string::npos && !event.msg.is_dm()){
-        co_await Beuro_Response(event.msg.content, event, beuro);
+        co_await beuro_exec.Beuro_Response(event.msg.content, event, beuro);
     }
 
     else if(event.msg.content.find("Beuro shutdown") != std::string::npos || event.msg.content.find("beuro shutdown") != std::string::npos){

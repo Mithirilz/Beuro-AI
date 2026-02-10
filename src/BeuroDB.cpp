@@ -1,85 +1,70 @@
 #include <SQLiteCpp/SQLiteCpp.h>
 #include <dotenv.h>
 #include <string>
+#include <unordered_map>
+#include <utility>
 #include "Proto/Beuro-proto.h"
 
-        void SQL_Execs::CreateTable(){
-            BeuroDB.exec("CREATE TABLE IF NOT EXISTS ChatHistory (ID INTEGER, CONTENT TEXT);");
-        }
+void SQL_Execs::CreateTable(){
+    BeuroDB.exec("CREATE TABLE IF NOT EXISTS ChatHistory (ID INTEGER, CONTENT TEXT);");
+}
 
-        void SQL_Execs::ReadFromFile(){
-        std::string message;
-            std::ifstream memory("Memory.txt");
+void SQL_Execs::InsertDataintoTable(std::unordered_map<int, std::string> chat_set){
+    SQLite::Statement execution(BeuroDB, "INSERT INTO ChatHistory (ID, CONTENT) VALUES (?, ?);");
+    if(chat_set.empty()){
+        std::cout << "SQL_Execs(InsertDataintoTable): The data given in the parameter is empty." << std::endl;
+    }
+
+    for (const auto&[ChatID, content] : chat_set){
+        execution.bind(1, ChatID);
+        execution.bind(2, content);
+        execution.exec();
+
+        std::cout << "ID" << ChatID << " | " << content << std::endl << std::endl;
+        execution.reset();
+    }
+
+    //std::cout << "Last ID entered (Or amount of messages in the database): " << counter << std::endl;
+}
+
+void SQL_Execs::GetAllInformationFromAllColumns(){
+    SQLite::Statement execution(BeuroDB, "SELECT * FROM ChatHistory");
+    
+    while(execution.executeStep()){
+        auto ID = execution.getColumn(0);
+        auto result = execution.getColumn(1);
+        
+        std::cout << ID << "|" << result << std::endl << std::endl;
+    }
+}
+
+std::string SQL_Execs::GetInformationFromIDTargets(){
+    SQLite::Statement execution(BeuroDB, "SELECT * FROM ChatHistory WHERE ID = ?");
+    std::string chat = "Context:\n";
+
+    for (const auto& ID : this->ID_targets){
+        execution.bind(1, ID);
+        
+        while(execution.executeStep()){
+            auto ID_result = execution.getColumn(0);
+            std::string result = execution.getColumn(1);
             
-            if(!memory.is_open()){
-                std::cout << "Unable to open the file" << std::endl;
-            }
-            
-            while(std::getline(memory, message)){
-                if(message == ""){
-                    continue;
-                }
-                
-                this->chat_content.emplace_back(message);
-                std::cout << message << std::endl;        
-            }
-
-            memory.close();
+            std::cout << "ID" << ID_result << std::endl;
+            chat = chat + result + "\n";
         }
 
-        void SQL_Execs::InsertDataintoTable(){
-            SQLite::Statement execution(BeuroDB, "INSERT INTO ChatHistory (ID, CONTENT) VALUES (?, ?);");
-            int counter = 1;
+        execution.reset();
+    }
 
-            for (const auto& chats : this->chat_content){
-                execution.bind(1, counter);
-                execution.bind(2, chats);
+    return chat;
+}
 
-                execution.exec();
+void SQL_Execs::GetIDTargets(std::vector<std::string> IDs){
+    auto ID_list = std::move(IDs);
 
-                std::cout << counter << "|" << chats << std::endl;
-                execution.reset();
-
-                counter = counter + 1;
-            }
-
-            std::cout << "Last ID entered (Or amount of messages in the database): " << counter << std::endl;
-        }
-
-        void SQL_Execs::QueryAllInformation(){
-            SQLite::Statement execution(BeuroDB, "SELECT * FROM ChatHistory");
-            
-            while(execution.executeStep()){
-                auto ID = execution.getColumn(0);
-                auto result = execution.getColumn(1);
-                
-                std::cout << ID << "|" << result << std::endl << std::endl;
-            }
-        }
-
-        void SQL_Execs::QueryTargettedData(){
-            SQLite::Statement execution(BeuroDB, "SELECT * FROM ChatHistory WHERE ID = ?");
-
-            for (const auto& ID : this->ID_targets){
-                execution.bind(1, ID);
-                
-                while(execution.executeStep()){
-                    auto ID_result = execution.getColumn(0);
-                    auto result = execution.getColumn(1);
-                    
-                    std::cout << ID_result << "|" << result << std::endl << std::endl;
-                }
-
-                execution.reset();
-            }
-        }
-
-        void SQL_Execs::ChangeDataType(std::string& ID){
-            auto search_result = ID.find("ID");
-
-            std::string cleaned_copy = ID.erase(search_result, 2);
-
-            int ID_number = std::stoi(cleaned_copy);
-            std::cout << ID_number << std::endl;
-        }
- 
+    for (std::string ID : ID_list){
+        ID.erase(ID.find("ID"), 2);
+        int ID_target = std::stoi(ID);
+        this->ID_targets.push_back(ID_target);
+    }
+}

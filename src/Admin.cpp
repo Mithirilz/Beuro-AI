@@ -1,66 +1,71 @@
-#include <Http/httplib.h>
 #include <ChromaDB/ChromaDB.h>
+#include "Proto/Beuro-proto.h"
+#include <Http/httplib.h>
 #include <fstream>
 #include <iostream>
+#include <ostream>
 #include <string>
 #include <vector>
-#include "Proto/Beuro-proto.h"
 
-std::string ChromaDB_Execs::InsertEmbedIntoCollection(){
+void ChromaDB_Execs::PrepareMessagesForStoring(const std::string& collection_name){
+    if(this->chat.empty()){
+        std::cout << "There is no chat to format, please prepare the chat data first." << std::endl;
+        return;
+    }
+
+    if(!BeuroVDB.CollectionExists(collection_name)){
+        std::cout << "Collection doesn't exist." << std::endl;
+        return;
+    }
+    
     std::cout << BeuroVDB.GetHeartbeat() << std::endl;
 
-    if (this->chats.empty()){
-        return "The chat array is empty";
-    }
-
-    int counter = 1;
-
-    std::vector<std::string> chat_set = {};
-    std::vector<std::string> IDs = {};
+    chromadb::Collection message_history = BeuroVDB.GetCollection(collection_name);
+    auto results = BeuroVDB.GetEmbeddings(message_history);
     
-    for(int i = 0; i < this->chats.size(); i+=2){
-        std::string ID = "ID" + std::to_string(counter);
-        std::string temp_msg = this->chats[i] + "\n" + this->chats[i+1];
-        
-        std::cout << ID << std::endl;
-        std::cout << temp_msg << std::endl << std::endl;
-        
-        IDs.emplace_back(ID);
-        chat_set.emplace_back(temp_msg);
-        
-        counter = counter + 1;
-    }
+    std::string STR_lastID = results.back().id;
 
-    if (!BeuroVDB.CollectionExists("ChatHistory")){
-        BeuroVDB.CreateCollection("ChatHistory");
-    }
+    STR_lastID.erase(STR_lastID.find("ID"), 2);
+    int INT_lastID = std::stoi(STR_lastID);
+    int counter = INT_lastID + 1;
 
-    chromadb::Collection message_history = BeuroVDB.GetCollection("ChatHistory");
-    std::shared_ptr<chromadb::LocalOllamaEmbeddingFunction> OllamaEmbeddingFunction = std::make_shared<chromadb::LocalOllamaEmbeddingFunction>("127.0.0.1:11434", "nomic-embed-text");
-    
-    auto embeds = OllamaEmbeddingFunction->Generate(chat_set);
-    BeuroVDB.AddEmbeddings(message_history, IDs, embeds);
-    
-    return "This function successfully executed.";
+    for(int i = 0; i < this->chat.size(); i+=2){
+        this->chat_set[counter] = chat[i] + "\n"+ chat[i+1];        
+        ++counter;
+    }    
 }
 
-std::string ChromaDB_Execs::OnlyDisplayMessagesForStoring(){
-    int counter = 1;
-
-    for(int i = 0; i < this->chats.size(); i+=2){
-        std::string ID = "ID" + std::to_string(counter);
-        std::string temp_msg = this->chats[i] + "\n" + this->chats[i+1];
-        
-        std::cout << ID << std::endl;
-        std::cout << temp_msg << std::endl << std::endl;
-        
-        counter = counter + 1;
-    }
-
-    return "Function executed successfully.";
+std::unordered_map<int, std::string> ChromaDB_Execs::Get_Chat_Data(){
+    return this->chat_set;
 }
 
-void ChromaDB_Execs::InsertMessagesForStoring(){
+void ChromaDB_Execs::DisplayMessagesForStoring(const std::string& collection_name){
+    if(this->chat.empty()){
+        std::cout << "The chat array for storage is empty, set the data first." << std::endl;
+        return;
+    }
+
+    chromadb::Collection message_history = BeuroVDB.GetCollection(collection_name);
+    auto results = BeuroVDB.GetEmbeddings(message_history);
+    
+    std::string STR_lastID = results.back().id;
+
+    STR_lastID.erase(STR_lastID.find("ID"), 2);
+    int INT_lastID = std::stoi(STR_lastID);
+    int counter = INT_lastID + 1;
+
+    for(int i = 0; i < this->chat.size();i+=2){
+        std::string ID = "ID" + std::to_string(counter);
+        std::string display_msg = this->chat[i] + "\n" + this->chat[i+1];
+        
+        std::cout << ID << std::endl;
+        std::cout << display_msg << std::endl << std::endl;
+        
+        ++counter;
+    }
+}
+
+void ChromaDB_Execs::Get_Chat_From_Chat_File(){
     std::string message;
     std::ifstream memory("Memory.txt");
     
@@ -73,56 +78,54 @@ void ChromaDB_Execs::InsertMessagesForStoring(){
             continue;
         }
         
-        this->chats.emplace_back(message);
-        std::cout << message << std::endl;        
+        std::cout << message << std::endl;
+        this->chat.emplace_back(message);
     }
 
     memory.close();
 }
 
-std::string ChromaDB_Execs::DoesCollectionExist(){
+void ChromaDB_Execs::DoesCollectionExist(){
     std::cout << BeuroVDB.GetHeartbeat() << std::endl;
 
     if(!BeuroVDB.CollectionExists("ChatHistory")) {
-        return "This collection does not exist";
+        std::cout << "This collection does not exist" << std::endl;
     }
     
-    return "This collection exists!";
+    std::cout << "This collection exists!" << std::endl;
 }
 
-std::string ChromaDB_Execs::GetAllEmbeddingsFromCollection(const std::string& collection_name){
-    chromadb::Collection message_history = BeuroVDB.GetCollection(collection_name);
+void ChromaDB_Execs::Get_All_IDs_and_Embeddings_from_Collection(const std::string& collection_name){
+    if(!BeuroVDB.CollectionExists(collection_name)){
+        std::cout << "Collection doesn't exist." << std::endl;
+        return;
+    }
 
+    chromadb::Collection message_history = BeuroVDB.GetCollection(collection_name);
     auto results = BeuroVDB.GetEmbeddings(message_history);
     
-    for(int i = 0; i < results[0].embeddings->size(); i++){
-        std::cout << results[i].embeddings->at(i) << std::endl << std::endl;
+    for(const auto& returned_data : results){
+        std::cout << returned_data.id << std::endl;
     }
-
-    return "This function successfully executed.";
 }
 
-std::string ChromaDB_Execs::GetIDFromQueryData(const std::vector<std::string>& query_data){
-    std::vector<std::chrono::duration<double>> calculated_time;
-
+std::vector<std::string> ChromaDB_Execs::SearchThroughChromaDB(const std::vector<std::string>& query_data){
     auto timer_start = std::chrono::high_resolution_clock::now();
     std::shared_ptr<chromadb::LocalOllamaEmbeddingFunction> OllamaEmbeddingFunction = std::make_shared<chromadb::LocalOllamaEmbeddingFunction>("127.0.0.1:11434", "nomic-embed-text");
 
     chromadb::Collection collection = BeuroVDB.GetCollection("ChatHistory", OllamaEmbeddingFunction);
 
     auto embeds = OllamaEmbeddingFunction->Generate(query_data);
-    auto results = BeuroVDB.Query(collection, {}, embeds, 1);
-
-    for (int i = 0; i < results.size(); i++){
-        for (int j = 0; j < results[i].ids.size(); j++){
-            std::cout << "IDs: " << results[i].ids.at(j) << std::endl;
-        }
-    }
+    auto results = BeuroVDB.Query(collection, {}, embeds, 3);
 
     auto timer_end = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<double> timed = timer_end - timer_start;
     std::cout << timed << std::endl;
-    
-    return "Function has executed successfully.";
+
+    return results[0].ids;
+}
+
+void ChromaDB_Execs::hard_reset(){
+    BeuroVDB.Reset();
 }

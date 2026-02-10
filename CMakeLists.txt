@@ -16,7 +16,7 @@ add_subdirectory(SQLiteCpp)
 add_subdirectory(chromadb-cpp)
 add_subdirectory(dotenv-cpp)
 
-add_executable(Beuro main.cpp src/BeuroAI.cpp)
+add_executable(Beuro main.cpp src/BeuroAI.cpp src/BeuroDB.cpp src/Admin.cpp)
 add_executable(ChromaCLI Tests/Admin.cpp)
 add_executable(BeuroDB Tests/BeuroDB.cpp)
 add_executable(Beuro-proto Tests/Beuro-proto.cpp src/BeuroDB.cpp src/Admin.cpp)
@@ -44,7 +44,9 @@ target_link_libraries(Beuro PRIVATE
     OpenSSL::Crypto
     Opus::opus
     unofficial-sodium::sodium
-    ZLIB::ZLIB)
+    ZLIB::ZLIB
+    chromadb
+    SQLiteCpp)
 
 target_link_libraries(ChromaCLI PRIVATE
     chromadb
@@ -65,6 +67,7 @@ target_link_libraries(Beuro-proto PRIVATE
 
 target_include_directories(Beuro PRIVATE 
     Header
+    chromadb-cpp/include
 )
 
 target_include_directories(Beuro-proto PRIVATE
