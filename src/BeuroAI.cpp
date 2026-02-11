@@ -84,6 +84,7 @@ dpp::task<void> BeuroAI::Beuro_Response(std::string user_message, const dpp::mes
         {
             std::lock_guard<std::mutex> lock(chat_history_lock);
             this->chat_history.pop_back();
+            this->chat_history.pop_back();
         }
         co_return;
     }
