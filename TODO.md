@@ -6,3 +6,8 @@
 - [x] Test the prototype 
     - [x] Ensure ChromaDB and SQLiteCpp execs are working first
     - [x] Ensure the prototype is working
+
+## Sub-list
+- [ ] Get an Agentic AI to be an event router for Beuro's RAG 
+- [ ] Test said Agentic AI 
+- [ ] Implement it to the main process
