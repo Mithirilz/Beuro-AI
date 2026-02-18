@@ -222,9 +222,9 @@ int main() {
     beuro.on_voice_state_update([](const dpp::voice_state_update_t& event){
         dpp::snowflake Owners_ID = 640069711341813763;
         auto GuildVC = dpp::find_guild(event.state.guild_id);
-        auto Mithirilz = GuildVC -> voice_members.find(Owners_ID);
+        auto Mithirilz = GuildVC->voice_members.find(Owners_ID);
 
-        if (Mithirilz == GuildVC -> voice_members.end()){
+        if (Mithirilz == GuildVC->voice_members.end()){
             event.from()->disconnect_voice(event.state.guild_id);
             return;
         }
@@ -249,10 +249,12 @@ dpp::task<void> owner_message_commands(const dpp::message_create_t& event, dpp::
 dpp::task<void> general_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro, BeuroAI& beuro_exec){
     if(event.msg.content.find("<@" + std::to_string(beuro.me.id) + ">") != std::string::npos && !event.msg.is_dm()){
         co_await beuro_exec.Beuro_Response(event.msg.content, event, beuro);
+        co_return;
     }
 
     else if(event.msg.content.find("Beuro shutdown") != std::string::npos || event.msg.content.find("beuro shutdown") != std::string::npos){
         co_await event.co_reply("Written by Mithirilz: \"sybau\"");
+        co_return;
     }
 }
 

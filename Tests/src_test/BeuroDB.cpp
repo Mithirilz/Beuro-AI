@@ -1,16 +1,15 @@
-#include "Beuro/BeuroRAG.h"
+#include "Proto/Beuro-proto.h"
 #include <SQLiteCpp/SQLiteCpp.h>
-#include <unordered_map>
 #include <dotenv.h>
-#include <dpp/dpp.h>
-#include <utility>
 #include <string>
+#include <unordered_map>
+#include <utility>
 
-void Actual::SQL_Execs::CreateTable(){
+void Proto::SQL_Execs::CreateTable(){
     BeuroDB.exec("CREATE TABLE IF NOT EXISTS ChatHistory (ID INTEGER, CONTENT TEXT);");
 }
 
-void Actual::SQL_Execs::InsertDataintoTable(std::unordered_map<int, std::string> chat_set){
+void Proto::SQL_Execs::InsertDataintoTable(std::unordered_map<int, std::string> chat_set){
     SQLite::Statement execution(BeuroDB, "INSERT INTO ChatHistory (ID, CONTENT) VALUES (?, ?);");
     if(chat_set.empty()){
         std::cout << "SQL_Execs(InsertDataintoTable): The data given in the parameter is empty." << std::endl;
@@ -28,7 +27,7 @@ void Actual::SQL_Execs::InsertDataintoTable(std::unordered_map<int, std::string>
     //std::cout << "Last ID entered (Or amount of messages in the database): " << counter << std::endl;
 }
 
-void Actual::SQL_Execs::GetAllInformationFromAllColumns(){
+void Proto::SQL_Execs::GetAllInformationFromAllColumns(){
     SQLite::Statement execution(BeuroDB, "SELECT * FROM ChatHistory");
     
     while(execution.executeStep()){
@@ -39,7 +38,7 @@ void Actual::SQL_Execs::GetAllInformationFromAllColumns(){
     }
 }
 
-std::string Actual::SQL_Execs::GetInformationFromIDTargets(){
+std::string Proto::SQL_Execs::GetInformationFromIDTargets(){
     SQLite::Statement execution(BeuroDB, "SELECT * FROM ChatHistory WHERE ID = ?");
     std::string chat = "Possibly-related past memories:\n";
 
@@ -60,7 +59,7 @@ std::string Actual::SQL_Execs::GetInformationFromIDTargets(){
     return chat;
 }
 
-dpp::task<void> Actual::SQL_Execs::GetIDTargets(std::vector<std::string> IDs){
+void Proto::SQL_Execs::GetIDTargets(std::vector<std::string> IDs){
     auto ID_list = std::move(IDs);
 
     for (std::string ID : ID_list){
@@ -68,6 +67,4 @@ dpp::task<void> Actual::SQL_Execs::GetIDTargets(std::vector<std::string> IDs){
         int ID_target = std::stoi(ID);
         this->ID_targets.push_back(ID_target);
     }
-
-    co_return;
 }

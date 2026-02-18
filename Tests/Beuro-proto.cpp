@@ -7,8 +7,8 @@
 
 int main(){
     dotenv::init();
-    ChromaDB_Execs chromaexec("http", "127.0.0.1", "8080"); 
-    SQL_Execs sqlexec(dotenv::getenv("FILEPATH"));
+    Proto::ChromaDB_Execs chromaexec("http", "127.0.0.1", "8080"); 
+    Proto::SQL_Execs sqlexec(dotenv::getenv("FILEPATH"));
 
     sqlexec.GetIDTargets(
         chromaexec.SearchThroughChromaDB({"Beuro, you remember about that book ready player one?"})

@@ -1,6 +1,13 @@
-#include "Beuro/BeuroRAG.h"
+#include "Proto/Beuro-proto.h"
+#include <ChromaDB/ChromaDB.h>
+#include <Http/httplib.h>
+#include <fstream>
+#include <iostream>
+#include <ostream>
+#include <string>
+#include <vector>
 
-void Actual::ChromaDB_Execs::PrepareMessagesForStoring(const std::string& collection_name){
+void Proto::ChromaDB_Execs::PrepareMessagesForStoring(const std::string& collection_name){
     if(this->chat.empty()){
         std::cout << "There is no chat to format, please prepare the chat data first." << std::endl;
         return;
@@ -28,11 +35,11 @@ void Actual::ChromaDB_Execs::PrepareMessagesForStoring(const std::string& collec
     }    
 }
 
-std::unordered_map<int, std::string> Actual::ChromaDB_Execs::Get_Chat_Data(){
+std::unordered_map<int, std::string> Proto::ChromaDB_Execs::Get_Chat_Data(){
     return this->chat_set;
 }
 
-void Actual::ChromaDB_Execs::DisplayMessagesForStoring(const std::string& collection_name){
+void Proto::ChromaDB_Execs::DisplayMessagesForStoring(const std::string& collection_name){
     if(this->chat.empty()){
         std::cout << "The chat array for storage is empty, set the data first." << std::endl;
         return;
@@ -58,7 +65,7 @@ void Actual::ChromaDB_Execs::DisplayMessagesForStoring(const std::string& collec
     }
 }
 
-void Actual::ChromaDB_Execs::Get_Chat_From_Chat_File(){
+void Proto::ChromaDB_Execs::Get_Chat_From_Chat_File(){
     std::string message;
     std::ifstream memory("Memory.txt");
     
@@ -78,7 +85,7 @@ void Actual::ChromaDB_Execs::Get_Chat_From_Chat_File(){
     memory.close();
 }
 
-void Actual::ChromaDB_Execs::DoesCollectionExist(){
+void Proto::ChromaDB_Execs::DoesCollectionExist(){
     std::cout << BeuroVDB.GetHeartbeat() << std::endl;
 
     if(!BeuroVDB.CollectionExists("ChatHistory")) {
@@ -88,7 +95,7 @@ void Actual::ChromaDB_Execs::DoesCollectionExist(){
     std::cout << "This collection exists!" << std::endl;
 }
 
-void Actual::ChromaDB_Execs::Get_All_IDs_and_Embeddings_from_Collection(const std::string& collection_name){
+void Proto::ChromaDB_Execs::Get_All_IDs_and_Embeddings_from_Collection(const std::string& collection_name){
     if(!BeuroVDB.CollectionExists(collection_name)){
         std::cout << "Collection doesn't exist." << std::endl;
         return;
@@ -102,7 +109,7 @@ void Actual::ChromaDB_Execs::Get_All_IDs_and_Embeddings_from_Collection(const st
     }
 }
 
-dpp::task<std::vector<std::string>> Actual::ChromaDB_Execs::SearchThroughChromaDB(const std::vector<std::string>& query_data){
+std::vector<std::string> Proto::ChromaDB_Execs::SearchThroughChromaDB(const std::vector<std::string>& query_data){
     auto timer_start = std::chrono::high_resolution_clock::now();
     std::shared_ptr<chromadb::LocalOllamaEmbeddingFunction> OllamaEmbeddingFunction = std::make_shared<chromadb::LocalOllamaEmbeddingFunction>("127.0.0.1:11434", "nomic-embed-text");
 
@@ -116,9 +123,9 @@ dpp::task<std::vector<std::string>> Actual::ChromaDB_Execs::SearchThroughChromaD
     std::chrono::duration<double> timed = timer_end - timer_start;
     std::cout << timed << std::endl;
 
-    co_return results[0].ids;
+    return results[0].ids;
 }
 
-void Actual::ChromaDB_Execs::hard_reset(){
+void Proto::ChromaDB_Execs::hard_reset(){
     BeuroVDB.Reset();
 }
