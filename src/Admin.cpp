@@ -109,7 +109,7 @@ dpp::task<std::vector<std::string>> Actual::ChromaDB_Execs::SearchThroughChromaD
     chromadb::Collection collection = BeuroVDB.GetCollection("ChatHistory", OllamaEmbeddingFunction);
 
     auto embeds = OllamaEmbeddingFunction->Generate(query_data);
-    auto results = BeuroVDB.Query(collection, {}, embeds, 3);
+    auto results = BeuroVDB.Query(collection, {}, embeds, 2);
 
     auto timer_end = std::chrono::high_resolution_clock::now();
 

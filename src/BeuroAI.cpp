@@ -25,9 +25,21 @@ dpp::job BeuroAI::writeBeuro_ChatHistory(std::string beuro_chat, std::string use
 }
 
 dpp::task<std::string> BeuroAI::Agentic_AI(std::string user_message, const dpp::message_create_t event, dpp::cluster& Beuro){    
+    std::vector<std::unordered_map<std::string, std::string>> command_set;
+    std::unordered_map<std::string, std::string> command;
+    
+    command["role"] = "system" ;
+    command["content"] = "Deduce what the user wants you to do here and ONLY say one of these 3 depending on the answer(RETRIEVE MEMORY, REMEMBER FACT, NOTHING)";
+    command_set.push_back(command);
+
+    command["role"] = "user";
+    command["content"] = user_message;
+    command_set.push_back(command);
+    
     json message_to_send;
-    message_to_send["model"] = "Beuro_Agent";
-    message_to_send["prompt"] = user_message;
+    message_to_send["model"] = "Beuro-proto";
+    message_to_send["messages"] = command_set;
+    message_to_send["stream"] = false;
     
     std::string http_message = message_to_send.dump();
 
@@ -38,7 +50,9 @@ dpp::task<std::string> BeuroAI::Agentic_AI(std::string user_message, const dpp::
         "application/json"
     );
 
-    co_return result.body;
+    auto message = json::parse(result.body);
+
+    co_return message.at("message").at("content");
 }
 
 dpp::task<void> BeuroAI::Beuro_Response(std::string user_message, const dpp::message_create_t event, dpp::cluster& Beuro){
@@ -62,7 +76,6 @@ dpp::task<void> BeuroAI::Beuro_Response(std::string user_message, const dpp::mes
     auto agent_command = Agentic_AI(user_message, event, Beuro);
         
     co_await ID_results;
-
     std::unordered_map<std::string, std::string> system_chat;
     system_chat["role"] = "system";
     system_chat["content"] = sqlexec.GetInformationFromIDTargets();
@@ -106,7 +119,7 @@ dpp::task<void> BeuroAI::Beuro_Response(std::string user_message, const dpp::mes
     );
 
     if(response.status != 200){
-        event.reply("ZzzZZzz...");
+        event.co_reply("ZzzZZzz...");
         std::cout << "Self-debug: Bot is either not on or faces a different error (" << response.status << ")";
         {
             std::lock_guard<std::mutex> lock(chat_history_lock);

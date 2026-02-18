@@ -63,7 +63,7 @@ std::string Actual::SQL_Execs::GetInformationFromIDTargets(){
 dpp::task<void> Actual::SQL_Execs::GetIDTargets(std::vector<std::string> IDs){
     auto ID_list = std::move(IDs);
 
-    for (std::string ID : ID_list){
+    for (std::string& ID : ID_list){
         ID.erase(ID.find("ID"), 2);
         int ID_target = std::stoi(ID);
         this->ID_targets.push_back(ID_target);
