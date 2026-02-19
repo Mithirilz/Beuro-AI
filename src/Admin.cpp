@@ -1,6 +1,9 @@
 #include "Beuro/BeuroRAG.h"
+#include "ChromaDB/Embeddings/LocalOllamaEmbeddingFunction.h"
+#include <memory>
+#include <string>
 
-void Actual::ChromaDB_Execs::PrepareMessagesForStoring(const std::string& collection_name){
+void Actual::ChromaDB_Execs::format_message(const std::string& collection_name){
     if(this->chat.empty()){
         std::cout << "There is no chat to format, please prepare the chat data first." << std::endl;
         return;
@@ -32,7 +35,7 @@ std::unordered_map<int, std::string> Actual::ChromaDB_Execs::Get_Chat_Data(){
     return this->chat_set;
 }
 
-void Actual::ChromaDB_Execs::DisplayMessagesForStoring(const std::string& collection_name){
+void Actual::ChromaDB_Execs::display_messages(const std::string& collection_name){
     if(this->chat.empty()){
         std::cout << "The chat array for storage is empty, set the data first." << std::endl;
         return;
@@ -58,24 +61,26 @@ void Actual::ChromaDB_Execs::DisplayMessagesForStoring(const std::string& collec
     }
 }
 
-void Actual::ChromaDB_Execs::Get_Chat_From_Chat_File(){
-    std::string message;
-    std::ifstream memory("Memory.txt");
-    
-    if(!memory.is_open()){
-        std::cout << "Unable to open the file" << std::endl;
-    }
-    
-    while(std::getline(memory, message)){
-        if(message == "") {
-            continue;
-        }
-        
-        std::cout << message << std::endl;
-        this->chat.emplace_back(message);
+void Actual::ChromaDB_Execs::store_message(const std::string message){
+    this->chat.emplace_back(message);
+}
+
+void Actual::ChromaDB_Execs::inject_into_VDB(const std::string& collection_name){
+    std::vector<std::string> IDs = {};
+    std::vector<std::string> Chats = {};
+
+    std::shared_ptr<chromadb::LocalOllamaEmbeddingFunction> OllamaEmbedder = std::make_shared<chromadb::LocalOllamaEmbeddingFunction>("nomic-embed-text");
+
+    auto collection = BeuroVDB.GetCollection(collection_name, OllamaEmbedder);
+
+    for (auto& [ID, chat] : this->chat_set){
+        IDs.push_back("ID" + std::to_string(ID));
+        Chats.push_back(chat);
     }
 
-    memory.close();
+    auto embeddings = OllamaEmbedder->Generate(chat);
+    this->BeuroVDB.AddEmbeddings(collection, IDs, embeddings);    
+    return;
 }
 
 void Actual::ChromaDB_Execs::DoesCollectionExist(){
@@ -88,7 +93,7 @@ void Actual::ChromaDB_Execs::DoesCollectionExist(){
     std::cout << "This collection exists!" << std::endl;
 }
 
-void Actual::ChromaDB_Execs::Get_All_IDs_and_Embeddings_from_Collection(const std::string& collection_name){
+void Actual::ChromaDB_Execs::GetAllInfoFromCollection(const std::string& collection_name){
     if(!BeuroVDB.CollectionExists(collection_name)){
         std::cout << "Collection doesn't exist." << std::endl;
         return;
@@ -102,7 +107,7 @@ void Actual::ChromaDB_Execs::Get_All_IDs_and_Embeddings_from_Collection(const st
     }
 }
 
-dpp::task<std::vector<std::string>> Actual::ChromaDB_Execs::SearchThroughChromaDB(const std::vector<std::string>& query_data){
+dpp::task<std::vector<std::string>> Actual::ChromaDB_Execs::SearchThroughVDB(const std::vector<std::string>& query_data){
     auto timer_start = std::chrono::high_resolution_clock::now();
     std::shared_ptr<chromadb::LocalOllamaEmbeddingFunction> OllamaEmbeddingFunction = std::make_shared<chromadb::LocalOllamaEmbeddingFunction>("127.0.0.1:11434", "nomic-embed-text");
 

@@ -4,7 +4,7 @@
 #include "Beuro/BeuroAI.h"
 
 
-void debugger(const dpp::slashcommand_t &event);
+dpp::job debugger(const dpp::slashcommand_t event);
 dpp::task<void> owner_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro, BeuroAI& beuro_exec);
 dpp::task<void> general_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro, BeuroAI& beuro_exec);
 dpp::task<void> delay();
@@ -263,6 +263,7 @@ dpp::task<void> delay(){
     co_return;
 }
 
-void debugger(const dpp::slashcommand_t& event){
+dpp::job debugger(const dpp::slashcommand_t event){
     std::cout << event.command.get_issuing_user().username << " issued a command." << std::endl;
+    co_return;
 }

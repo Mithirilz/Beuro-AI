@@ -15,14 +15,14 @@ class ChromaDB_Execs{
         
     public:
         ChromaDB_Execs(const std::string& http, const std::string& address, const std::string& port) : BeuroVDB{http, address, port}{}
-        void PrepareMessagesForStoring(const std::string& collection_name);
-        void DisplayMessagesForStoring(const std::string& collection_name);
+        void format_message(const std::string& collection_name);
+        void display_messages(const std::string& collection_name);
         std::unordered_map<int, std::string> Get_Chat_Data();
-        void InsertMessagesForStoringIntoVDB(const std::string& collection_name);
+        void inject_into_VDB(const std::string& collection_name);
         void DoesCollectionExist();
-        void Get_Chat_From_Chat_File();
-        void Get_All_IDs_and_Embeddings_from_Collection(const std::string& collection_name);
-        dpp::task<std::vector<std::string>> SearchThroughChromaDB(const std::vector<std::string>& query_data);
+        void store_message(const std::string message);
+        void GetAllInfoFromCollection(const std::string& collection_name);
+        dpp::task<std::vector<std::string>> SearchThroughVDB(const std::vector<std::string>& query_data);
         void hard_reset();
 };
 
@@ -34,8 +34,8 @@ class SQL_Execs{
     public:
         SQL_Execs(const std::string& FILEPATH) : BeuroDB{FILEPATH, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE}{}
         void CreateTable();
-        void InsertDataintoTable(std::unordered_map<int, std::string> chat_set);
-        void GetAllInformationFromAllColumns();
+        dpp::job InsertDataintoTable(std::unordered_map<int, std::string> chat_set);
+        void GetAllInformationFromTable();
         std::string GetInformationFromIDTargets();
         dpp::task<void> GetIDTargets(std::vector<std::string> IDs);
 };

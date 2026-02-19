@@ -1,8 +1,8 @@
-#include "Beuro/BeuroRAG.h"
 #include <SQLiteCpp/SQLiteCpp.h>
+#include "Beuro/BeuroRAG.h"
 #include <unordered_map>
-#include <dotenv.h>
 #include <dpp/dpp.h>
+#include <dotenv.h>
 #include <utility>
 #include <string>
 
@@ -10,8 +10,10 @@ void Actual::SQL_Execs::CreateTable(){
     BeuroDB.exec("CREATE TABLE IF NOT EXISTS ChatHistory (ID INTEGER, CONTENT TEXT);");
 }
 
-void Actual::SQL_Execs::InsertDataintoTable(std::unordered_map<int, std::string> chat_set){
+dpp::job Actual::SQL_Execs::InsertDataintoTable(std::unordered_map<int, std::string> chat_set){
     SQLite::Statement execution(BeuroDB, "INSERT INTO ChatHistory (ID, CONTENT) VALUES (?, ?);");
+    SQLite::Statement getFinalNumber(BeuroDB, "SELECT MAX(ID) FROM ChatHistory");
+
     if(chat_set.empty()){
         std::cout << "SQL_Execs(InsertDataintoTable): The data given in the parameter is empty." << std::endl;
     }
@@ -25,10 +27,15 @@ void Actual::SQL_Execs::InsertDataintoTable(std::unordered_map<int, std::string>
         execution.reset();
     }
 
-    //std::cout << "Last ID entered (Or amount of messages in the database): " << counter << std::endl;
+    while(getFinalNumber.executeStep()){
+        int LAST_ID = getFinalNumber.getColumn(0);
+        std::cout << "Last ID entered (Or amount of messages in the database): " << LAST_ID << std::endl;
+    }
+    
+    co_return;
 }
 
-void Actual::SQL_Execs::GetAllInformationFromAllColumns(){
+void Actual::SQL_Execs::GetAllInformationFromTable(){
     SQLite::Statement execution(BeuroDB, "SELECT * FROM ChatHistory");
     
     while(execution.executeStep()){
