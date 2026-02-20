@@ -8,6 +8,6 @@
     - [x] Ensure the prototype is working
 
 ## Sub-list
-- [ ] Get an Agentic AI to be an event router for Beuro's RAG 
-- [ ] Test said Agentic AI 
-- [ ] Implement it to the main process
+- [x] Get an Agentic AI to be an event router for Beuro's RAG 
+- [x] Test said Agentic AI 
+- [x] Implement it to the main process
