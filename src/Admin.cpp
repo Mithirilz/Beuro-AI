@@ -1,5 +1,4 @@
 #include "Beuro/BeuroRAG.h"
-#include "ChromaDB/Embeddings/LocalOllamaEmbeddingFunction.h"
 #include <memory>
 #include <string>
 
@@ -14,7 +13,7 @@ void Actual::ChromaDB_Execs::format_message(const std::string& collection_name){
         return;
     }
     
-    std::cout << BeuroVDB.GetHeartbeat() << std::endl;
+    std::cout << "Beuro's Memory Heartbeat: "<< BeuroVDB.GetHeartbeat() << std::endl;
 
     chromadb::Collection message_history = BeuroVDB.GetCollection(collection_name);
     auto results = BeuroVDB.GetEmbeddings(message_history);
@@ -78,7 +77,7 @@ void Actual::ChromaDB_Execs::inject_into_VDB(const std::string& collection_name)
         Chats.push_back(chat);
     }
 
-    auto embeddings = OllamaEmbedder->Generate(chat);
+    auto embeddings = OllamaEmbedder->Generate(Chats);
     this->BeuroVDB.AddEmbeddings(collection, IDs, embeddings);    
     return;
 }
@@ -107,21 +106,21 @@ void Actual::ChromaDB_Execs::GetAllInfoFromCollection(const std::string& collect
     }
 }
 
-dpp::task<std::vector<std::string>> Actual::ChromaDB_Execs::SearchThroughVDB(const std::vector<std::string>& query_data){
+std::vector<std::string> Actual::ChromaDB_Execs::SearchThroughVDB(const std::vector<std::string>& query_data){
     auto timer_start = std::chrono::high_resolution_clock::now();
     std::shared_ptr<chromadb::LocalOllamaEmbeddingFunction> OllamaEmbeddingFunction = std::make_shared<chromadb::LocalOllamaEmbeddingFunction>("127.0.0.1:11434", "nomic-embed-text");
 
     chromadb::Collection collection = BeuroVDB.GetCollection("ChatHistory", OllamaEmbeddingFunction);
 
     auto embeds = OllamaEmbeddingFunction->Generate(query_data);
-    auto results = BeuroVDB.Query(collection, {}, embeds, 2);
+    auto results = BeuroVDB.Query(collection, {}, embeds, 1);
 
     auto timer_end = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<double> timed = timer_end - timer_start;
     std::cout << timed << std::endl;
 
-    co_return results[0].ids;
+    return results[0].ids;
 }
 
 void Actual::ChromaDB_Execs::hard_reset(){

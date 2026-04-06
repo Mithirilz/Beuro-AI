@@ -1,12 +1,11 @@
-#include <dpp/dpp.h>
-#include <chrono>
-#include <dotenv.h>
 #include "Beuro/BeuroAI.h"
+#include <dpp/dpp.h>
+#include <dotenv.h>
+#include <chrono>
 
-
-dpp::job debugger(const dpp::slashcommand_t event);
-dpp::task<void> owner_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro, BeuroAI& beuro_exec);
 dpp::task<void> general_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro, BeuroAI& beuro_exec);
+dpp::task<void> owner_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro, BeuroAI& beuro_exec);
+dpp::job debugger(const dpp::slashcommand_t event);
 dpp::task<void> delay();
 
 int main() {
@@ -25,14 +24,14 @@ int main() {
 
     beuro.on_log(dpp::utility::cout_logger());
     
-    beuro.on_slashcommand([](const dpp::slashcommand_t& event){
-        if (event.command.get_command_name() =="neuro") {
-            event.reply("https://cdn.discordapp.com/attachments/1072697081443131476/1439145564070740048/oo_ee_oo-1.mov?ex=692de380&is=692c9200&hm=c7eaedf245cf27b26b2e520a32b38d6d945c0e53f3ad1df93f66e7450977e89b&");
+    beuro.on_slashcommand([](const dpp::slashcommand_t& event)->dpp::task<void> {
+        if (event.command.get_command_name() == "neuro") {
+            co_await event.co_reply("https://cdn.discordapp.com/attachments/1072697081443131476/1439145564070740048/oo_ee_oo-1.mov?ex=692de380&is=692c9200&hm=c7eaedf245cf27b26b2e520a32b38d6d945c0e53f3ad1df93f66e7450977e89b&");
             debugger(event);
         }
         
         else if (event.command.get_command_name() == "ai_baby"){
-            event.reply("https://images-ext-1.discordapp.net/external/eIJoIaL4bAbZi1LpCv7ZxwhyIYHDgut6OuDQ1lt6O0k/https/media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExaXc5cnRqa2YzcXM0N3l6amt2cjdqdDA4d3VuNGloMGg4bGg0a29tMSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/4tXCHa4BzNbeqsRNVv/giphy.gif?width=600&height=600");
+            co_await event.co_reply("https://images-ext-1.discordapp.net/external/eIJoIaL4bAbZi1LpCv7ZxwhyIYHDgut6OuDQ1lt6O0k/https/media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExaXc5cnRqa2YzcXM0N3l6amt2cjdqdDA4d3VuNGloMGg4bGg0a29tMSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/4tXCHa4BzNbeqsRNVv/giphy.gif?width=600&height=600");
             debugger(event);
         }
 
@@ -49,7 +48,7 @@ int main() {
                 );
             dpp::message msg (event.command.channel_id, Soyjack);
 
-            event.reply(msg);
+            co_await event.co_reply(msg);
             debugger(event);
         }
 
@@ -69,7 +68,7 @@ int main() {
 
             dpp::message msg(event.command.channel_id, Hex);
 
-            event.reply(msg);
+            co_await event.co_reply(msg);
             debugger(event);
         }
 
@@ -108,7 +107,7 @@ int main() {
 
             dpp::message msg(event.command.channel_id, Beuro);
 
-            event.reply(msg);
+            co_await event.co_reply(msg);
             debugger(event);    
         }
 
@@ -147,7 +146,7 @@ int main() {
                 .set_timestamp(time(0));
 
             dpp::message msg(event.command.channel_id, Explanation);
-            event.reply(msg);
+            co_await event.co_reply(msg);
             debugger(event);    
         }
 
@@ -155,19 +154,21 @@ int main() {
             dpp::guild* guild = dpp::find_guild(event.command.guild_id);
 
             if(!guild->connect_member_voice(*event.owner, event.command.get_issuing_user().id, false, true)){
-                event.co_reply("Failed to join VC...");
+                co_await event.co_reply("Failed to join VC...");
             }
 
             else if(event.command.get_issuing_user().id == 640069711341813763){
-                event.reply("Hey there Creator");
+                co_await event.co_reply("Hey there Creator");
                 debugger(event);
             }
 
             else{
-                event.reply("Hey there random person");
+                co_await event.co_reply("Hey there random person");
                 debugger(event);
             }
         }
+        
+        co_return;
     });
     
 

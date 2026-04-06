@@ -67,7 +67,7 @@ std::string Actual::SQL_Execs::GetInformationFromIDTargets(){
     return chat;
 }
 
-dpp::task<void> Actual::SQL_Execs::GetIDTargets(std::vector<std::string> IDs){
+void Actual::SQL_Execs::GetIDTargets(std::vector<std::string> IDs){
     auto ID_list = std::move(IDs);
 
     for (std::string& ID : ID_list){
@@ -75,6 +75,4 @@ dpp::task<void> Actual::SQL_Execs::GetIDTargets(std::vector<std::string> IDs){
         int ID_target = std::stoi(ID);
         this->ID_targets.push_back(ID_target);
     }
-
-    co_return;
 }

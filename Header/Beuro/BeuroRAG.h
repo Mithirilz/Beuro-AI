@@ -22,7 +22,7 @@ class ChromaDB_Execs{
         void DoesCollectionExist();
         void store_message(const std::string message);
         void GetAllInfoFromCollection(const std::string& collection_name);
-        dpp::task<std::vector<std::string>> SearchThroughVDB(const std::vector<std::string>& query_data);
+        std::vector<std::string> SearchThroughVDB(const std::vector<std::string>& query_data);
         void hard_reset();
 };
 
@@ -37,7 +37,7 @@ class SQL_Execs{
         dpp::job InsertDataintoTable(std::unordered_map<int, std::string> chat_set);
         void GetAllInformationFromTable();
         std::string GetInformationFromIDTargets();
-        dpp::task<void> GetIDTargets(std::vector<std::string> IDs);
+        void GetIDTargets(std::vector<std::string> IDs);
 };
 
 
