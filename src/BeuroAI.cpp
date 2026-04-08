@@ -1,5 +1,6 @@
 #include <nlohmann/json.hpp>
 #include "Beuro/BeuroAI.h"
+#include <ostream>
 #include <unordered_map>
 #include <dpp/dpp.h>
 #include <fstream>
@@ -23,7 +24,7 @@ dpp::job BeuroAI::writeBeuro_ChatHistory(std::string beuro_chat, std::string use
     RecordHistory.close();
 }
 
-dpp::task<void> BeuroAI::Beuro_Commands(const std::string& DECISION, const std::string& content_message){
+dpp::task<void> BeuroAI::Beuro_Commands(const std::string& DECISION, const std::string& content_message, bool& is_store){
     if (DECISION == "NOTHING"){
         std::cout << "Beuro did NOTHING" << std::endl;
         co_return;
@@ -44,27 +45,27 @@ dpp::task<void> BeuroAI::Beuro_Commands(const std::string& DECISION, const std::
             this->chat_history.push_back(system_chat);
         }
 
+        std::cout << "---------------MEMORY RECALLED---------------" << std::endl
+                  << sqlexec.GetInformationFromIDTargets() << std::endl    
+                  << "---------------------------------------------" << std::endl;
+                     
         co_return;
     }
 
     else if(DECISION == "REMEMBER FACT"){
         std::cout << "Beuro ENGAGED RAG (STORE)" << std::endl;
         
-        //VECTOR DATABASE RAG PIPELINE
+        //(This process will be continued in Beuro_Response func)
         chromaexec.store_message(content_message);
-        chromaexec.format_message("ChatHistory");
-        chromaexec.display_messages("ChatHistory");
-        chromaexec.inject_into_VDB("ChatHistory");
-
-        sqlexec.InsertDataintoTable(
-            chromaexec.Get_Chat_Data()
-        );
+        is_store = true;
 
         co_return;
     }
 
     else{
-        std::cout << "Beuro made an INVALID DECISION" << std::endl; 
+        std::cout << "Beuro made an INVALID DECISION" << std::endl
+                  << DECISION << std::endl; 
+
         co_return;
     }
 }
@@ -74,9 +75,7 @@ dpp::task<std::string> BeuroAI::Decision_Maker(const std::string& user_message, 
     
     std::unordered_map<std::string, std::string> command;
     command["role"] = "system";
-    command["content"] = "You can only respond with these 3 answers(RETRIEVE MEMORY, NOTHING)\n"
-                         "If the user isn't mentioning new information, always pick NOTHING.\n"
-                         "If there is information said that wasn't mentioned througho   ut the conversation, use RETRIEVE MEMORY";
+    command["content"] = "You can only respond with these 3 answers(RETRIEVE MEMORY, REMEMBER FACT, NOTHING)";
     command_set.push_back(command);
 
 
@@ -106,7 +105,8 @@ dpp::task<std::string> BeuroAI::Decision_Maker(const std::string& user_message, 
 
 dpp::task<void> BeuroAI::Beuro_Response(std::string user_message, const dpp::message_create_t& event, dpp::cluster& Beuro){
     dpp::async typing_status = Beuro.co_channel_typing(event.msg.channel_id);
-    
+    bool is_store_rag = false;
+
     if (this->chat_history.size() > 250){
         {
             std::lock_guard<std::mutex> lock(this->chat_history_lock);
@@ -126,7 +126,8 @@ dpp::task<void> BeuroAI::Beuro_Response(std::string user_message, const dpp::mes
 
     co_await Beuro_Commands(
         co_await decisioning_process,
-        content_message
+        content_message,
+        is_store_rag
     );
 
     std::unordered_map<std::string, std::string> user_chat;
@@ -140,7 +141,7 @@ dpp::task<void> BeuroAI::Beuro_Response(std::string user_message, const dpp::mes
     json message_to_send;
     {
         std::lock_guard<std::mutex> lock(this->chat_history_lock);
-        message_to_send["model"] = "Beuro";
+        message_to_send["model"] = "Beuro-proto";
         message_to_send["messages"] = chat_history;
         message_to_send["stream"] = false;
     }
@@ -171,22 +172,27 @@ dpp::task<void> BeuroAI::Beuro_Response(std::string user_message, const dpp::mes
     co_await typing_status;
     event.co_reply(beuro_response);
 
+    //Completes RAG storage if stored
+    if(is_store_rag){
+        chromaexec.store_message(beuro_response);
+        chromaexec.format_message("ChatHistory");
+        chromaexec.display_messages("ChatHistory");
+        chromaexec.inject_into_VDB("ChatHistory");
+
+        sqlexec.InsertDataintoTable(
+            chromaexec.Get_Chat_Data() //Clears back all message stored
+        );
+    }
+
     std::unordered_map<std::string, std::string> beuro_chat;
     beuro_chat["role"] = "assistant";
     beuro_chat["content"] = beuro_response;
-    {
-        std::lock_guard<std::mutex> lock(this->chat_history_lock);
-        this->chat_history.push_back(beuro_chat);
 
-        for (int i = 0; i < this->chat_history.size(); i++){
-            std::cout << this->chat_history[i].at("content") << std::endl;
+    std::cout << content_message << std::endl;
+    std::cout << "Beuro responds with: " << beuro_response << std::endl; 
+    std::cout << "---------------------------------------------" << std::endl;
 
-            if (i == this->chat_history.size()-1){
-                std::cout << "---------------------RENEWED RECORD HISTORY--------------------" << std::endl;
-            }
-        }
-    }
-    
     writeBeuro_ChatHistory(json_Beuro.at("message").at("content").get<std::string>(), event.msg.author.username, user_message);
+    
     co_return;
 }

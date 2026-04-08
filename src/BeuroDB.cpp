@@ -64,6 +64,8 @@ std::string Actual::SQL_Execs::GetInformationFromIDTargets(){
         execution.reset();
     }
 
+    this->ID_targets.clear(); //Prevents IDs being used over and over again
+
     return chat;
 }
 

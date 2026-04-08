@@ -15,8 +15,8 @@ void Actual::ChromaDB_Execs::format_message(const std::string& collection_name){
     
     std::cout << "Beuro's Memory Heartbeat: "<< BeuroVDB.GetHeartbeat() << std::endl;
 
-    chromadb::Collection message_history = BeuroVDB.GetCollection(collection_name);
-    auto results = BeuroVDB.GetEmbeddings(message_history);
+    chromadb::Collection ChatHistory = BeuroVDB.GetCollection(collection_name);
+    auto results = BeuroVDB.GetEmbeddings(ChatHistory);
     
     std::string STR_lastID = results.back().id;
 
@@ -31,7 +31,10 @@ void Actual::ChromaDB_Execs::format_message(const std::string& collection_name){
 }
 
 std::unordered_map<int, std::string> Actual::ChromaDB_Execs::Get_Chat_Data(){
-    return this->chat_set;
+    std::unordered_map<int, std::string> chat_set_copy = this->chat_set; 
+    this->chat_set.clear(); //Clears back memory area
+
+    return chat_set_copy;
 }
 
 void Actual::ChromaDB_Execs::display_messages(const std::string& collection_name){
@@ -49,7 +52,7 @@ void Actual::ChromaDB_Execs::display_messages(const std::string& collection_name
     int INT_lastID = std::stoi(STR_lastID);
     int counter = INT_lastID + 1;
 
-    for(int i = 0; i < this->chat.size();i+=2){
+    for(int i = 0; i < this->chat.size(); i+=2){
         std::string ID = "ID" + std::to_string(counter);
         std::string display_msg = this->chat[i] + "\n" + this->chat[i+1];
         
@@ -68,7 +71,7 @@ void Actual::ChromaDB_Execs::inject_into_VDB(const std::string& collection_name)
     std::vector<std::string> IDs = {};
     std::vector<std::string> Chats = {};
 
-    std::shared_ptr<chromadb::LocalOllamaEmbeddingFunction> OllamaEmbedder = std::make_shared<chromadb::LocalOllamaEmbeddingFunction>("nomic-embed-text");
+    std::shared_ptr<chromadb::LocalOllamaEmbeddingFunction> OllamaEmbedder = std::make_shared<chromadb::LocalOllamaEmbeddingFunction>("127.0.0.1:11434", "nomic-embed-text");
 
     auto collection = BeuroVDB.GetCollection(collection_name, OllamaEmbedder);
 
