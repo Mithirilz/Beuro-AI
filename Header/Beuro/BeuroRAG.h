@@ -34,7 +34,7 @@ class SQL_Execs{
     public:
         SQL_Execs(const std::string& FILEPATH) : BeuroDB{FILEPATH, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE}{}
         void CreateTable();
-        dpp::job InsertDataintoTable(std::unordered_map<int, std::string> chat_set);
+        void InsertDataintoTable(std::unordered_map<int, std::string> chat_set);
         void GetAllInformationFromTable();
         std::string GetInformationFromIDTargets();
         void GetIDTargets(std::vector<std::string> IDs);

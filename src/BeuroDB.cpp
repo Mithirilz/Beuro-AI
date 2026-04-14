@@ -10,7 +10,7 @@ void Actual::SQL_Execs::CreateTable(){
     BeuroDB.exec("CREATE TABLE IF NOT EXISTS ChatHistory (ID INTEGER, CONTENT TEXT);");
 }
 
-dpp::job Actual::SQL_Execs::InsertDataintoTable(std::unordered_map<int, std::string> chat_set){
+void Actual::SQL_Execs::InsertDataintoTable(std::unordered_map<int, std::string> chat_set){
     SQLite::Statement execution(BeuroDB, "INSERT INTO ChatHistory (ID, CONTENT) VALUES (?, ?);");
     SQLite::Statement getFinalNumber(BeuroDB, "SELECT MAX(ID) FROM ChatHistory");
 
@@ -31,8 +31,6 @@ dpp::job Actual::SQL_Execs::InsertDataintoTable(std::unordered_map<int, std::str
         int LAST_ID = getFinalNumber.getColumn(0);
         std::cout << "Last ID entered (Or amount of messages in the database): " << LAST_ID << std::endl;
     }
-    
-    co_return;
 }
 
 void Actual::SQL_Execs::GetAllInformationFromTable(){

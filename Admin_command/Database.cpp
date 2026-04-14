@@ -1,8 +1,11 @@
-#include <iostream>
+#include "SQLiteCpp/Database.h"
 #include <SQLiteCpp/SQLiteCpp.h>
 #include <ChromaDB/ChromaDB.h>
+#include <dotenv.h> 
 
-int main(){
-    std::cout << "Hello world" << std::endl;
+int main(){ 
+    SQLite::Database BeuroDB(dotenv::getenv("FILEPATH"));
+    
+
     return 0;
 }
