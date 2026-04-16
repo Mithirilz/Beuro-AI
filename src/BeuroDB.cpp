@@ -1,16 +1,16 @@
 #include <SQLiteCpp/SQLiteCpp.h>
-#include "Beuro/BeuroRAG.h"
+#include "Beuro/BeuroAI.h"
 #include <unordered_map>
 #include <dpp/dpp.h>
 #include <dotenv.h>
 #include <utility>
 #include <string>
 
-void Actual::SQL_Execs::CreateTable(){
+void SQL_Execs::CreateTable(){
     BeuroDB.exec("CREATE TABLE IF NOT EXISTS ChatHistory (ID INTEGER, CONTENT TEXT);");
 }
 
-dpp::job Actual::SQL_Execs::InsertDataintoTable(std::unordered_map<int, std::string> chat_set){
+dpp::job SQL_Execs::InsertDataintoTable(std::unordered_map<int, std::string> chat_set){
     SQLite::Statement execution(BeuroDB, "INSERT INTO ChatHistory (ID, CONTENT) VALUES (?, ?);");
     SQLite::Statement getFinalNumber(BeuroDB, "SELECT MAX(ID) FROM ChatHistory");
 
@@ -35,7 +35,7 @@ dpp::job Actual::SQL_Execs::InsertDataintoTable(std::unordered_map<int, std::str
     co_return;
 }
 
-void Actual::SQL_Execs::GetAllInformationFromTable(){
+void SQL_Execs::GetAllInformationFromTable(){
     SQLite::Statement execution(BeuroDB, "SELECT * FROM ChatHistory");
     
     while(execution.executeStep()){
@@ -46,7 +46,7 @@ void Actual::SQL_Execs::GetAllInformationFromTable(){
     }
 }
 
-std::string Actual::SQL_Execs::GetInformationFromIDTargets(){
+std::string SQL_Execs::GetInformationFromIDTargets(){
     SQLite::Statement execution(BeuroDB, "SELECT * FROM ChatHistory WHERE ID = ?");
     std::string chat = "Possibly-related past memories:\n";
 
@@ -67,7 +67,7 @@ std::string Actual::SQL_Execs::GetInformationFromIDTargets(){
     return chat;
 }
 
-void Actual::SQL_Execs::GetIDTargets(std::vector<std::string> IDs){
+void SQL_Execs::GetIDTargets(std::vector<std::string> IDs){
     auto ID_list = std::move(IDs);
 
     for (std::string& ID : ID_list){
