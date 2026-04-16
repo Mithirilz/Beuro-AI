@@ -9,7 +9,7 @@ set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 
-add_executable(Beuro main.cpp src/BeuroAI.cpp src/Admin.cpp src/BeuroDB.cpp Header/Beuro/BeuroRAG.h Header/Beuro/BeuroAI.h)
+add_executable(Beuro main.cpp src/BeuroAI.cpp src/Admin.cpp src/BeuroDB.cpp)
 add_executable(Beuro-proto Tests/Beuro-proto.cpp Tests/src_test/BeuroDB.cpp Tests/src_test/Admin.cpp)
 add_executable(ChromaCLI Tests/testAdmin.cpp)
 add_executable(BeuroDB Tests/testBeuroDB.cpp)

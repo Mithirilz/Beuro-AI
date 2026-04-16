@@ -9,6 +9,10 @@ Beuro-prompts
 .clangd
 Backup
 
+#Test folders
+Tests/
+Header/Proto/
+
 #Other REPOs used to make this project
 DPP
 chromadb-cpp

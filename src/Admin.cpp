@@ -1,8 +1,9 @@
-#include "Beuro/BeuroRAG.h"
+#include <ChromaDB/ChromaDB.h>
+#include "Beuro/BeuroAI.h"
 #include <memory>
 #include <string>
 
-void Actual::ChromaDB_Execs::format_message(const std::string& collection_name){
+void ChromaDB_Execs::format_message(const std::string& collection_name){
     if(this->chat.empty()){
         std::cout << "There is no chat to format, please prepare the chat data first." << std::endl;
         return;
@@ -30,14 +31,11 @@ void Actual::ChromaDB_Execs::format_message(const std::string& collection_name){
     }    
 }
 
-std::unordered_map<int, std::string> Actual::ChromaDB_Execs::Get_Chat_Data(){
-    std::unordered_map<int, std::string> chat_set_copy = this->chat_set; 
-    this->chat_set.clear(); //Clears back memory area
-
-    return chat_set_copy;
+std::unordered_map<int, std::string> ChromaDB_Execs::Get_Chat_Data(){
+    return this->chat_set;
 }
 
-void Actual::ChromaDB_Execs::display_messages(const std::string& collection_name){
+void ChromaDB_Execs::display_messages(const std::string& collection_name){
     if(this->chat.empty()){
         std::cout << "The chat array for storage is empty, set the data first." << std::endl;
         return;
@@ -63,11 +61,11 @@ void Actual::ChromaDB_Execs::display_messages(const std::string& collection_name
     }
 }
 
-void Actual::ChromaDB_Execs::store_message(const std::string message){
+void ChromaDB_Execs::store_message(const std::string message){
     this->chat.emplace_back(message);
 }
 
-void Actual::ChromaDB_Execs::inject_into_VDB(const std::string& collection_name){
+void ChromaDB_Execs::inject_into_VDB(const std::string& collection_name){
     std::vector<std::string> IDs = {};
     std::vector<std::string> Chats = {};
 
@@ -85,7 +83,7 @@ void Actual::ChromaDB_Execs::inject_into_VDB(const std::string& collection_name)
     return;
 }
 
-void Actual::ChromaDB_Execs::DoesCollectionExist(){
+void ChromaDB_Execs::DoesCollectionExist(){
     std::cout << BeuroVDB.GetHeartbeat() << std::endl;
 
     if(!BeuroVDB.CollectionExists("ChatHistory")) {
@@ -95,7 +93,7 @@ void Actual::ChromaDB_Execs::DoesCollectionExist(){
     std::cout << "This collection exists!" << std::endl;
 }
 
-void Actual::ChromaDB_Execs::GetAllInfoFromCollection(const std::string& collection_name){
+void ChromaDB_Execs::GetAllInfoFromCollection(const std::string& collection_name){
     if(!BeuroVDB.CollectionExists(collection_name)){
         std::cout << "Collection doesn't exist." << std::endl;
         return;
@@ -109,7 +107,7 @@ void Actual::ChromaDB_Execs::GetAllInfoFromCollection(const std::string& collect
     }
 }
 
-std::vector<std::string> Actual::ChromaDB_Execs::SearchThroughVDB(const std::vector<std::string>& query_data){
+std::vector<std::string> ChromaDB_Execs::SearchThroughVDB(const std::vector<std::string>& query_data){
     auto timer_start = std::chrono::high_resolution_clock::now();
     std::shared_ptr<chromadb::LocalOllamaEmbeddingFunction> OllamaEmbeddingFunction = std::make_shared<chromadb::LocalOllamaEmbeddingFunction>("127.0.0.1:11434", "nomic-embed-text");
 
@@ -126,6 +124,6 @@ std::vector<std::string> Actual::ChromaDB_Execs::SearchThroughVDB(const std::vec
     return results[0].ids;
 }
 
-void Actual::ChromaDB_Execs::hard_reset(){
+void ChromaDB_Execs::hard_reset(){
     BeuroVDB.Reset();
 }
