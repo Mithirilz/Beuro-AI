@@ -31,6 +31,8 @@ dpp::job SQL_Execs::InsertDataintoTable(std::unordered_map<int, std::string> cha
         int LAST_ID = getFinalNumber.getColumn(0);
         std::cout << "Last ID entered (Or amount of messages in the database): " << LAST_ID << std::endl;
     }
+
+    co_return;
 }
 
 void SQL_Execs::GetAllInformationFromTable(){
