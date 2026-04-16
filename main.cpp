@@ -175,16 +175,14 @@ int main() {
     beuro.on_ready([&beuro](const dpp::ready_t& event){
         if (dpp::run_once<struct register_bot_commands>()) {
 
-            //For the Euro Dev Platform
             beuro.guild_bulk_command_create({
                 dpp::slashcommand("join", "Beuro VC test", beuro.me.id),
                 dpp::slashcommand("ai_baby", "golshi", beuro.me.id),
                 dpp::slashcommand("neuro", "im thinking neuro", beuro.me.id),
                 dpp::slashcommand("bot_inquiry", "What's the bot about?", beuro.me.id),
                 dpp::slashcommand("future_devs", "What is the future for the Euro Series?", beuro.me.id)
-            }, 1442447584596721705);
+            }, dotenv::getenv("SERVER_ID2"));
 
-            //For World Descention
             beuro.guild_bulk_command_create({
                 dpp::slashcommand("ai_baby", "golshi", beuro.me.id),
                 dpp::slashcommand("hex", "Hex the Kat", beuro.me.id),
@@ -193,9 +191,8 @@ int main() {
                 dpp::slashcommand("bot_inquiry", "What's the bot about?", beuro.me.id),
                 dpp::slashcommand("future_devs", "What is the future for the Euro Series?", beuro.me.id),
                 dpp::slashcommand("soyjack", "Soyjack, nothing happened...", beuro.me.id)
-            }, 1118551179518033931);
+            }, dotenv::getenv("SERVER_ID1"));
 
-            //For Solo Dev Platform
             beuro.guild_bulk_command_create({
                 dpp::slashcommand("join", "Beuro VC test", beuro.me.id),
                 dpp::slashcommand("ai_baby", "golshi", beuro.me.id),
@@ -204,7 +201,7 @@ int main() {
                 dpp::slashcommand("bot_inquiry", "What's the bot about?", beuro.me.id),
                 dpp::slashcommand("future_devs", "What is the future for the Euro Series?", beuro.me.id),
                 dpp::slashcommand("soyjack", "Soyjack, nothing happened...", beuro.me.id)
-            }, 889999517758398494);
+            }, dotenv::getenv("SERVER_ID3"));
         }
     });
 
