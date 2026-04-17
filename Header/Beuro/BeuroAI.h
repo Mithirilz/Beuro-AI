@@ -48,8 +48,9 @@ class BeuroAI{
         BeuroAI(const std::string& FILEPATH, const std::string& PORT) : chromaexec("http", "127.0.0.1", PORT), sqlexec(FILEPATH){}
 
         dpp::task<void> Beuro_Response(std::string user_message, const dpp::message_create_t& event, dpp::cluster& Beuro);
-        dpp::task<void> Beuro_Commands(const std::string& DECISION, const std::string& user_message);
-        dpp::task<std::string> Decision_Maker(const std::string& user_message, const dpp::message_create_t& event, dpp::cluster& Beuro);
+        dpp::task<void> initiate_act(const std::string& DECISION, const std::string& user_message);
+        dpp::task<void> store_memory(dpp::cluster& Beuro);
+        dpp::task<std::string> make_a_decision(const std::string& user_message, const dpp::message_create_t& event, dpp::cluster& Beuro);
         dpp::job writeBeuro_ChatHistory(std::string beuro_chat, std::string user, std::string user_message);
 };
 

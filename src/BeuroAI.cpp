@@ -23,7 +23,7 @@ dpp::job BeuroAI::writeBeuro_ChatHistory(std::string beuro_chat, std::string use
     RecordHistory.close();
 }
 
-dpp::task<void> BeuroAI::Beuro_Commands(const std::string& DECISION, const std::string& content_message){
+dpp::task<void> BeuroAI::initiate_act(const std::string& DECISION, const std::string& content_message){
     if (DECISION == "NOTHING"){
         std::cout << "Beuro did NOTHING" << std::endl;
         co_return;
@@ -47,36 +47,21 @@ dpp::task<void> BeuroAI::Beuro_Commands(const std::string& DECISION, const std::
         co_return;
     }
 
-    else if(DECISION == "REMEMBER FACT"){
-        std::cout << "Beuro ENGAGED RAG (STORE)" << std::endl;
-        
-        //VECTOR DATABASE RAG PIPELINE
-        chromaexec.store_message(content_message);
-        chromaexec.format_message("ChatHistory");
-        chromaexec.display_messages("ChatHistory");
-        chromaexec.inject_into_VDB("ChatHistory");
-
-        sqlexec.InsertDataintoTable(
-            chromaexec.Get_Chat_Data()
-        );
-
-        co_return;
-    }
-
     else{
         std::cout << "Beuro made an INVALID DECISION" << std::endl; 
         co_return;
     }
 }
 
-dpp::task<std::string> BeuroAI::Decision_Maker(const std::string& user_message, const dpp::message_create_t& event, dpp::cluster& Beuro){    
+dpp::task<std::string> BeuroAI::make_a_decision(const std::string& user_message, const dpp::message_create_t& event, dpp::cluster& Beuro){    
     std::vector<std::unordered_map<std::string, std::string>> command_set;
     
     std::unordered_map<std::string, std::string> command;
     command["role"] = "system";
-    command["content"] = "You can only respond with these 3 answers(RETRIEVE MEMORY, NOTHING)\n"
+    command["content"] = "You can only respond with these 2 answers (RETRIEVE MEMORY, NOTHING)\n"
                          "If the user isn't mentioning new information, always pick NOTHING.\n"
-                         "If there is information said that wasn't mentioned througho   ut the conversation, use RETRIEVE MEMORY";
+                         "If there is information said that wasn't mentioned throughout the conversation, use RETRIEVE MEMORY";
+
     command_set.push_back(command);
 
 
@@ -104,6 +89,41 @@ dpp::task<std::string> BeuroAI::Decision_Maker(const std::string& user_message, 
     co_return message.at("message").at("content").get<std::string>();
 }
 
+dpp::task<void> BeuroAI::store_memory(dpp::cluster& Beuro){
+    json message_to_send;
+
+    {
+        std::lock_guard<std::mutex> lock(this->chat_history_lock);
+        message_to_send["model"] = "Beuro";
+        message_to_send["messages"] = chat_history;
+        message_to_send["stream"] = false;
+    }
+
+    auto result = co_await Beuro.co_request(
+    "http://127.0.0.1:11434/api/chat",
+    dpp::m_post,
+    message_to_send.dump(),
+    "application/json");
+
+    if (result.status != 200){
+        std::cout << "Memory storage failed" << std::endl;
+        co_return;
+    }
+
+    std::cout << result.body << std::endl;
+
+    chromaexec.store_message(result.body);
+    chromaexec.format_message("ChatHistory");
+    chromaexec.display_messages("ChatHistory");
+    chromaexec.inject_into_VDB("ChatHistory");
+
+    sqlexec.InsertDataintoTable(
+        chromaexec.Get_Chat_Data()
+    );
+    
+    co_return;
+}
+
 dpp::task<void> BeuroAI::Beuro_Response(std::string user_message, const dpp::message_create_t& event, dpp::cluster& Beuro){
     dpp::async typing_status = Beuro.co_channel_typing(event.msg.channel_id);
     
@@ -122,9 +142,9 @@ dpp::task<void> BeuroAI::Beuro_Response(std::string user_message, const dpp::mes
     }
 
     const std::string content_message = "[" + event.msg.author.username + "] : " + user_message;
-    auto decisioning_process = Decision_Maker(content_message, event, Beuro);
+    auto decisioning_process = make_a_decision(content_message, event, Beuro);
 
-    co_await Beuro_Commands(
+    co_await initiate_act(
         co_await decisioning_process,
         content_message
     );
