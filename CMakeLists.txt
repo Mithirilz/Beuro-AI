@@ -8,9 +8,11 @@ project(Beuro)
 set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-
 add_executable(Beuro main.cpp src/BeuroAI.cpp src/Admin.cpp src/BeuroDB.cpp)
 add_executable(Admin Admin_command/Database.cpp)
+
+set_target_properties(Admin PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+set_target_properties(Beuro PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
 find_package(nlohmann_json 3.12.0 REQUIRED)
 find_package(OpenSSL 3.0 REQUIRED)
@@ -21,19 +23,6 @@ add_subdirectory(DPP)
 add_subdirectory(SQLiteCpp)
 add_subdirectory(chromadb-cpp)
 add_subdirectory(dotenv-cpp)
-
-
-set_target_properties(Beuro PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
-set_target_properties(Admin PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
-
-if (WIN32)
-    add_custom_command(TARGET Beuro POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "$<TARGET_RUNTIME_DLLS:Beuro>"
-            "$<TARGET_FILE_DIR:Beuro>"
-        COMMAND_EXPAND_LISTS
-    )
-endif()
 
 target_link_libraries(Beuro PRIVATE 
     dpp
