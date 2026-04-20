@@ -238,7 +238,9 @@ dpp::task<void> owner_message_commands(const dpp::message_create_t& event, dpp::
     }
 
     else if(event.msg.content.find("Beuro shutdown") != std::string::npos){
-        co_await event.co_reply("Shutting down in 5 seconds...");
+        auto storage_process = beuro_exec.store_memory(beuro);
+        co_await event.co_reply("Shutting down in a few seconds...");
+        co_await storage_process;
         co_await delay();
         beuro.shutdown();
     }

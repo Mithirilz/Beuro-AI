@@ -94,7 +94,14 @@ dpp::task<void> BeuroAI::store_memory(dpp::cluster& Beuro){
 
     {
         std::lock_guard<std::mutex> lock(this->chat_history_lock);
-        message_to_send["model"] = "Beuro";
+
+        std::unordered_map<std::string, std::string> user_chat;
+        user_chat["role"] = "user";
+        user_chat["content"] = "END OF CONVERSATION";
+
+        this->chat_history.push_back(user_chat);
+
+        message_to_send["model"] = "Summariser";
         message_to_send["messages"] = chat_history;
         message_to_send["stream"] = false;
     }
@@ -110,8 +117,11 @@ dpp::task<void> BeuroAI::store_memory(dpp::cluster& Beuro){
         co_return;
     }
 
-    std::cout << result.body << std::endl;
+    auto json_Beuro = json::parse(result.body); 
+    const std::string summarised_memory =  json_Beuro.at("message").at("content").get<std::string>();;
 
+    std::cout << "Summariser: " + summarised_memory << std::endl;
+/*
     chromaexec.store_message(result.body);
     chromaexec.format_message("ChatHistory");
     chromaexec.display_messages("ChatHistory");
@@ -120,7 +130,7 @@ dpp::task<void> BeuroAI::store_memory(dpp::cluster& Beuro){
     sqlexec.InsertDataintoTable(
         chromaexec.Get_Chat_Data()
     );
-    
+*/
     co_return;
 }
 
@@ -160,7 +170,7 @@ dpp::task<void> BeuroAI::Beuro_Response(std::string user_message, const dpp::mes
     json message_to_send;
     {
         std::lock_guard<std::mutex> lock(this->chat_history_lock);
-        message_to_send["model"] = "Beuro";
+        message_to_send["model"] = "Beuro-proto";
         message_to_send["messages"] = chat_history;
         message_to_send["stream"] = false;
     }
