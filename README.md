@@ -1,6 +1,6 @@
 # Beuro AI
 C++ Discord Bot Beuro with local RAG features and experimental AI-driven decision-making (In manners of RAG memory).
----
+
 ## How to run the program:
 1. Install Dependencies, Ollama and Docker.
 
@@ -20,7 +20,7 @@ This command was referenced from this repository [ChromaDB-cpp](https://github.c
 ```bash
 ./Beuro.exe
 ```
----
+
 ## Dependencies:
 
 ### D++
@@ -39,15 +39,14 @@ This command was referenced from this repository [ChromaDB-cpp](https://github.c
 
 ### Environment variable
 1. [dotenv](https://github.com/laserpants/dotenv-cpp)
----
 
+## Development screenshots:
 
-### Development screenshots:
 ![Showcase](./assets/DevelopmentSS_2.png)
 
 
 ![Showcase](./assets/DevelopmentSS_1.png)
----
+
 ## Remarks:
 Feel free to Pull Request if you'd like, or submit an issue if there is something you'd like to suggest or point out regarding the program. Overall, this project is still in progress and would benefit from any recommendations given.
 ---
