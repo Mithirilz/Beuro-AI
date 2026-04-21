@@ -8,6 +8,10 @@ You will also need to download docker and run the ChromaDB database on it, the c
 
 ## Dependencies:
 1. [D++](https://github.com/brainboxdotcc/DPP)
+    -[OpenSSL](https://openssl.org/) for D++ HTTPS
+    -[zlib](https://zlib.net/) D++ websocket compression
+    -[libopus](https://www.opus-codec.org/) D++ audio encoding/decoding (Not yet used)
+    -[MLS++](https://github.com/cisco/mlspp) for D++ voice support (Not yet used)
 2. [ChromaDB-cpp](https://github.com/BlackyDrum/chromadb-cpp)
 3. [SQLite-cpp](https://github.com/SRombauts/SQLiteCpp)
 4. [dotenv](https://github.com/laserpants/dotenv-cpp)
