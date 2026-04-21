@@ -49,7 +49,7 @@ This command was referenced from this repository [ChromaDB-cpp](https://github.c
 
 ## Remarks:
 Feel free to Pull Request if you'd like, or submit an issue if there is something you'd like to suggest or point out regarding the program. Overall, this project is still in progress and would benefit from any recommendations given.
----
+
 > [!NOTE]
 > NOTE:
 > Beuro is an experimental AI bot inspired by Neuro-sama, it is meant to be a learning experience and a technical nod to the original. If there is any issue with Neuro-sama's legal team regarding the naming or anything else, please feel free to submit an issue or contact me on my profile's email. 
