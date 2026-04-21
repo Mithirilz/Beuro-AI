@@ -7,11 +7,23 @@ Ignoring most of main.cpp, the only thing that matters are the on_message create
 You will also need to download docker and run the ChromaDB database on it, the commands to run it can be found in the [ChromaDB-cpp](https://github.com/BlackyDrum/chromadb-cpp) repository. Essentially, the same method is used here.
 
 ## Dependencies:
+
+### D++
 1. [D++](https://github.com/brainboxdotcc/DPP)
-2. [ChromaDB-cpp](https://github.com/BlackyDrum/chromadb-cpp)
-3. [SQLite-cpp](https://github.com/SRombauts/SQLiteCpp)
-4. [dotenv](https://github.com/laserpants/dotenv-cpp)
-5. [nlohmann-json](https://github.com/nlohmann/json)
+2. [OpenSSL](https://openssl.org/) for D++ HTTPS
+3. [zlib](https://zlib.net/) D++ websocket compression
+4. [libopus](https://www.opus-codec.org/) D++ audio encoding/decoding (Not yet used)
+5. [MLS++](https://github.com/cisco/mlspp) for D++ voice support (Not yet used)
+
+### RAG
+1. [ChromaDB-cpp](https://github.com/BlackyDrum/chromadb-cpp)
+2. [SQLite-cpp](https://github.com/SRombauts/SQLiteCpp)
+
+### Json
+1. [nlohmann-json](https://github.com/nlohmann/json)
+
+### Environment variable
+1. [dotenv](https://github.com/laserpants/dotenv-cpp)
 
 ## Remarks:
 Feel free to Pull Request if you'd like, or submit an issue if there is something you'd like to suggest or point out regarding the program. Overall, this project is still in progress and would benefit from any recommendations given.
