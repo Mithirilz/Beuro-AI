@@ -22,7 +22,7 @@ You will also need to download docker and run the ChromaDB database on it, the c
 ### Json
 1. [nlohmann-json](https://github.com/nlohmann/json)
 
-### .env
+### Environment variable
 1. [dotenv](https://github.com/laserpants/dotenv-cpp)
 
 ## Remarks:
