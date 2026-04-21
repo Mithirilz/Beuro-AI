@@ -41,8 +41,8 @@ This command was referenced from this repository [ChromaDB-cpp](https://github.c
 1. [dotenv](https://github.com/laserpants/dotenv-cpp)
 
 ### Development screenshots:
-![Showcase](./assets/DevelopmentSS#1.png)
-![Showcase](./assets/DevelopmentSS#2.png)
+![Beuro in action](assets/DevelopmentSS#1.png)
+![Beuro in action](assets/DevelopmentSS#2.png)
 
 ## Remarks:
 Feel free to Pull Request if you'd like, or submit an issue if there is something you'd like to suggest or point out regarding the program. Overall, this project is still in progress and would benefit from any recommendations given.
