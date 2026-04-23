@@ -1,12 +1,10 @@
 #include "Beuro/BeuroAI.h"
 #include <dpp/dpp.h>
 #include <dotenv.h>
-#include <chrono>
 
 dpp::task<void> general_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro, BeuroAI& beuro_exec);
 dpp::task<void> owner_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro, BeuroAI& beuro_exec);
 dpp::job debugger(const dpp::slashcommand_t event);
-dpp::task<void> delay();
 
 int main() {
     dotenv::init();
@@ -237,11 +235,10 @@ dpp::task<void> owner_message_commands(const dpp::message_create_t& event, dpp::
         co_return;
     }
 
-    else if(event.msg.content.find("Beuro shutdown") != std::string::npos){
+    else if(event.msg.content.find("Beuro shutdown") || event.msg.content.find("beuro shutdown") != std::string::npos){
         auto storage_process = beuro_exec.store_memory(beuro);
-        co_await event.co_reply("Shutting down in a few seconds...");
+        event.co_reply("Shutting down in a few seconds...");
         co_await storage_process;
-        co_await delay();
         beuro.shutdown();
     }
 }
@@ -256,11 +253,6 @@ dpp::task<void> general_message_commands(const dpp::message_create_t& event, dpp
         co_await event.co_reply("Written by Mithirilz: \"sybau\"");
         co_return;
     }
-}
-
-dpp::task<void> delay(){
-    std::this_thread::sleep_for(std::chrono::seconds(5));
-    co_return;
 }
 
 dpp::job debugger(const dpp::slashcommand_t event){
