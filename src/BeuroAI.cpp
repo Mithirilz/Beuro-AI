@@ -7,47 +7,6 @@
 #include <mutex>
 using json = nlohmann::json;
 
-dpp::job BeuroAI::writeBeuro_ChatHistory(std::string beuro_chat, std::string user, std::string user_message){
-    std::ofstream RecordHistory;
-
-    RecordHistory.open("History.txt", std::ofstream::app);
-
-    if(!RecordHistory.is_open()){
-        std::cout << "File could not be opened";
-        co_return;
-    }
-
-    RecordHistory << user + ": " + user_message << std::endl;
-    RecordHistory << "Beuro: " + beuro_chat << std::endl << std::endl;
-    
-    RecordHistory.close();
-}
-
-dpp::task<std::string> BeuroAI::initiate_act(const std::string& DECISION, const std::string& content_message){
-    if (DECISION == "NOTHING"){
-        std::cout << "Beuro did NOTHING" << std::endl;
-        co_return content_message;
-    }
-
-    else if(DECISION == "RETRIEVE MEMORY"){
-        std::cout << "Beuro ENGAGED RAG (RETRIEVAL)" << std::endl;
-
-        sqlexec.GetIDTargets(
-            chromaexec.SearchThroughVDB({content_message})
-        );
-
-        const std::string final_message = "[Context/Memory]:\n" + sqlexec.GetInformationFromIDTargets() + "\n\n"
-                                    + content_message;
-
-        co_return final_message;
-    }
-
-    else{
-        std::cout << "Beuro made an INVALID DECISION" << std::endl; 
-        co_return content_message;
-    }
-}
-
 dpp::task<std::string> BeuroAI::make_a_decision(const std::string user_message, const dpp::message_create_t& event, dpp::cluster& Beuro){    
     std::vector<std::unordered_map<std::string, std::string>> command_set;
     
@@ -57,12 +16,11 @@ dpp::task<std::string> BeuroAI::make_a_decision(const std::string user_message, 
                          "If the user isn't mentioning new information, always pick NOTHING.\n"
                          "If there is information said that wasn't mentioned throughout the conversation, use RETRIEVE MEMORY";
 
-    command_set.push_back(command);
-
-
     std::unordered_map<std::string, std::string> user_chat;
     user_chat["role"] = "user";
     user_chat["content"] = user_message;
+    
+    command_set.push_back(command);
     command_set.push_back(user_chat);
     
     json message_to_send;
@@ -84,38 +42,84 @@ dpp::task<std::string> BeuroAI::make_a_decision(const std::string user_message, 
     co_return message.at("message").at("content").get<std::string>();
 }
 
+dpp::task<std::string> BeuroAI::initiate_act(const std::string& DECISION, const std::string& content_message){
+    if (DECISION == "NOTHING"){
+        std::cout << "Beuro did NOTHING" << std::endl;
+        co_return content_message;
+    }
+
+    else if(DECISION == "RETRIEVE MEMORY"){
+        std::cout << "Beuro ENGAGED RAG (RETRIEVAL)" << std::endl;
+
+        sqlexec.GetIDTargets(
+            chromaexec.SearchThroughVDB({content_message})
+        );
+
+        const std::string final_message = "[Context/Memory]:\n" + sqlexec.GetInformationFromIDTargets() + "\n\n" + content_message;
+
+        co_return final_message;
+    }
+
+    else{
+        std::cout << "Beuro made an INVALID DECISION" << std::endl; 
+        co_return content_message;
+    }
+}
+
 dpp::task<void> BeuroAI::store_memory(dpp::cluster& Beuro){
+    const int NUMBER_OF_SUMMARIES = 3;
+    
+    std::string summarised_text;
+    std::string next_prompt;
+
+    std::vector<std::string> summaries;
+    summaries.reserve(3);
+
     json message_to_send;
 
+    std::unordered_map<std::string, std::string> user_chat;
+    user_chat["role"] = "user";
+    user_chat["content"] = "END OF CONVERSATION";
     {
         std::lock_guard<std::mutex> lock(this->chat_history_lock);
-
-        std::unordered_map<std::string, std::string> user_chat;
-        user_chat["role"] = "user";
-        user_chat["content"] = "END OF CONVERSATION";
-
         this->chat_history.push_back(user_chat);
 
         message_to_send["model"] = "Summariser";
         message_to_send["messages"] = chat_history;
         message_to_send["stream"] = false;
     }
+    
+    //Refine summary 3 times before completely shutting down
+    for (int i = 0; i < NUMBER_OF_SUMMARIES; i++) {
+        auto result = co_await Beuro.co_request(
+        "http://127.0.0.1:11434/api/chat",
+        dpp::m_post,
+        message_to_send.dump(),
+        "application/json");
 
-    auto result = co_await Beuro.co_request(
-    "http://127.0.0.1:11434/api/chat",
-    dpp::m_post,
-    message_to_send.dump(),
-    "application/json");
+        if (result.status != 200){
+            std::cout << "Memory storage failed" << std::endl;
+            break;
+        }
 
-    if (result.status != 200){
-        std::cout << "Memory storage failed" << std::endl;
-        co_return;
+        if (result.body.find("NULL") != std::string::npos ){
+            break;            
+        }
+
+        summarised_text = json::parse(result.body).at("message").at("content").get<std::string>();
+        summaries.emplace_back(summarised_text);
+
+        next_prompt = "Cross check this summary for missing or incorrect details send the refined version:\n\n" + summaries[i] + "\n\nIf no changes are needed, return NULL";
+        user_chat["content"] = next_prompt;
+        {
+            std::lock_guard<std::mutex> lock(this->chat_history_lock);
+            
+            this->chat_history.push_back(user_chat);
+            message_to_send["messages"] = chat_history;
+        }
+        
+        std::cout << summarised_text << std::endl;        
     }
-
-    auto json_Beuro = json::parse(result.body); 
-    const std::string summarised_memory =  json_Beuro.at("message").at("content").get<std::string>();;
-
-    std::cout << "Summariser: " + summarised_memory << std::endl;
 /*
     chromaexec.store_message(result.body);
     chromaexec.format_message("ChatHistory");
@@ -147,10 +151,10 @@ dpp::task<void> BeuroAI::Beuro_Response(std::string user_message, const dpp::mes
     }
 
     const std::string content_message = "[" + event.msg.author.username + "] : " + user_message;
-    auto decisioning_process = make_a_decision(content_message, event, Beuro);
+    auto decision_results = make_a_decision(content_message, event, Beuro);
 
     const std::string final_messsage = co_await initiate_act(
-        co_await decisioning_process,
+        co_await decision_results,
         content_message
     );
 
@@ -202,16 +206,28 @@ dpp::task<void> BeuroAI::Beuro_Response(std::string user_message, const dpp::mes
     {
         std::lock_guard<std::mutex> lock(this->chat_history_lock);
         this->chat_history.push_back(beuro_chat);
-
-        for (int i = 0; i < this->chat_history.size(); i++){
-            std::cout << this->chat_history[i].at("content") << std::endl;
-
-            if (i == this->chat_history.size()-1){
-                std::cout << "---------------------RENEWED RECORD HISTORY--------------------" << std::endl;
-            }
-        }
     }
-    
+
+    std::cout << final_messsage << std::endl;
+    std::cout << "Beuro: " + beuro_response << std::endl;
+    std::cout << "__________________________________" << std::endl;
+
     writeBeuro_ChatHistory(json_Beuro.at("message").at("content").get<std::string>(), event.msg.author.username, user_message);
     co_return;
+}
+
+dpp::job BeuroAI::writeBeuro_ChatHistory(std::string beuro_chat, std::string user, std::string user_message){
+    std::ofstream RecordHistory;
+
+    RecordHistory.open("History.txt", std::ofstream::app);
+
+    if(!RecordHistory.is_open()){
+        std::cout << "File could not be opened";
+        co_return;
+    }
+
+    RecordHistory << user + ": " + user_message << std::endl;
+    RecordHistory << "Beuro: " + beuro_chat << std::endl << std::endl;
+    
+    RecordHistory.close();
 }
