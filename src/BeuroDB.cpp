@@ -35,15 +35,15 @@ dpp::job SQL_Execs::InsertDataintoTable(std::unordered_map<int, std::string> cha
     co_return;
 }
 
-void SQL_Execs::GetAllInformationFromTable(){
-    SQLite::Statement execution(BeuroDB, "SELECT * FROM ChatHistory");
-    
-    while(execution.executeStep()){
-        auto ID = execution.getColumn(0);
-        auto result = execution.getColumn(1);
-        
-        std::cout << ID << "|" << result << std::endl << std::endl;
+int SQL_Execs::getNumberofIDs(){
+    SQLite::Statement number_of_IDs(BeuroDB, "SELECT MAX(ID) FROM ChatHistory");
+    int ID = 0;
+
+    while(number_of_IDs.executeStep()){
+        ID = number_of_IDs.getColumn(0);
     }
+
+    return ID;
 }
 
 std::string SQL_Execs::GetInformationFromIDTargets(){

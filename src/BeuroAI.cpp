@@ -124,10 +124,12 @@ dpp::task<void> BeuroAI::Beuro_Response(std::string user_message, const dpp::mes
     const std::string content_message = "[" + event.msg.author.username + "] : " + user_message;
     auto decisioning_process = Decision_Maker(content_message, event, Beuro);
 
-    co_await Beuro_Commands(
-        co_await decisioning_process,
-        content_message
-    );
+    if(this->decider){
+        co_await Beuro_Commands(
+            co_await this->decider(content_message, event, Beuro),
+            content_message
+        );
+    }
 
     std::unordered_map<std::string, std::string> user_chat;
     user_chat["role"] = "user";
