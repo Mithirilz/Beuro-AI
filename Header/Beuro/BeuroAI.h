@@ -55,8 +55,7 @@ class BeuroAI{
 
             if (NumberofIDs != 0){
                 this->decider = [this](const std::string &user_message, const dpp::message_create_t &event, dpp::cluster &Beuro){
-                    auto task = Decision_Maker(user_message, event, Beuro);
-                    return task;
+                    return Decision_Maker(user_message, event, Beuro);
                 };
             }
         }
