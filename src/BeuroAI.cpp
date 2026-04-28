@@ -7,7 +7,7 @@
 #include <mutex>
 using json = nlohmann::json;
 
-dpp::job BeuroAI::writeBeuro_ChatHistory(std::string beuro_chat, std::string user, std::string user_message){
+dpp::job BeuroAI::writeBeuro_ChatHistory(const std::string beuro_chat, const std::string user, const std::string user_message){
     std::ofstream RecordHistory;
 
     RecordHistory.open("History.txt", std::ofstream::app);
@@ -76,7 +76,7 @@ dpp::task<std::string> BeuroAI::Decision_Maker(const std::string& user_message, 
     command["role"] = "system";
     command["content"] = "You can only respond with these 3 answers(RETRIEVE MEMORY, NOTHING)\n"
                          "If the user isn't mentioning new information, always pick NOTHING.\n"
-                         "If there is information said that wasn't mentioned througho   ut the conversation, use RETRIEVE MEMORY";
+                         "If there is information said that wasn't mentioned throughout the conversation, use RETRIEVE MEMORY";
     command_set.push_back(command);
 
 
@@ -106,13 +106,7 @@ dpp::task<std::string> BeuroAI::Decision_Maker(const std::string& user_message, 
 
 dpp::task<void> BeuroAI::Beuro_Response(std::string user_message, const dpp::message_create_t& event, dpp::cluster& Beuro){
     dpp::async typing_status = Beuro.co_channel_typing(event.msg.channel_id);
-    
-    if (this->chat_history.size() > 250){
-        {
-            std::lock_guard<std::mutex> lock(this->chat_history_lock);
-            chat_history.erase(this->chat_history.begin(), this->chat_history.begin()+150);
-        }    
-    }
+    dpp::task<std::string> decision_task;
     
     if(!event.msg.is_dm()){
         std::string BOT_ID = ("<@" + std::to_string(Beuro.me.id) + ">");
@@ -122,12 +116,24 @@ dpp::task<void> BeuroAI::Beuro_Response(std::string user_message, const dpp::mes
     }
 
     const std::string content_message = "[" + event.msg.author.username + "] : " + user_message;
-    auto decisioning_process = Decision_Maker(content_message, event, Beuro);
 
-    co_await Beuro_Commands(
-        co_await decisioning_process,
-        content_message
-    );
+    if(this->decider){
+        decision_task = this->decider(user_message, event, Beuro);
+    }
+
+    if (this->chat_history.size() > 250){
+        {
+            std::lock_guard<std::mutex> lock(this->chat_history_lock);
+            chat_history.erase(this->chat_history.begin(), this->chat_history.begin()+150);
+        }    
+    }
+
+    if (this->decider){
+        co_await Beuro_Commands(
+            co_await decision_task,
+            content_message
+        );
+    }
 
     std::unordered_map<std::string, std::string> user_chat;
     user_chat["role"] = "user";
@@ -145,7 +151,7 @@ dpp::task<void> BeuroAI::Beuro_Response(std::string user_message, const dpp::mes
         message_to_send["stream"] = false;
     }
 
-    std::string http_message = message_to_send.dump();
+    const std::string http_message = message_to_send.dump();
     auto response = co_await Beuro.co_request(
         "http://127.0.0.1:11434/api/chat", 
         dpp::m_post, 
@@ -165,8 +171,7 @@ dpp::task<void> BeuroAI::Beuro_Response(std::string user_message, const dpp::mes
         co_return;
     }
 
-    auto json_Beuro = json::parse(response.body);
-    std::string beuro_response = json_Beuro.at("message").at("content").get<std::string>();
+    const std::string beuro_response = json::parse(response.body).at("message").at("content").get<std::string>();
 
     co_await typing_status;
     event.co_reply(beuro_response);
@@ -187,6 +192,6 @@ dpp::task<void> BeuroAI::Beuro_Response(std::string user_message, const dpp::mes
         }
     }
     
-    writeBeuro_ChatHistory(json_Beuro.at("message").at("content").get<std::string>(), event.msg.author.username, user_message);
+    writeBeuro_ChatHistory(beuro_response, event.msg.author.username, user_message);
     co_return;
 }
