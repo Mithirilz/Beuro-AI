@@ -1,7 +1,6 @@
 #pragma once
-#include "coro/task.h"
-#include <dpp/dpp.h>
 #include <mutex>
+#include <dpp/dpp.h>
 #include <unordered_map>
 #include <SQLiteCpp/SQLiteCpp.h>
 #include <ChromaDB/ChromaDB.h>

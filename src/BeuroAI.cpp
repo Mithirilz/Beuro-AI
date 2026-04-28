@@ -76,7 +76,7 @@ dpp::task<std::string> BeuroAI::Decision_Maker(const std::string& user_message, 
     command["role"] = "system";
     command["content"] = "You can only respond with these 3 answers(RETRIEVE MEMORY, NOTHING)\n"
                          "If the user isn't mentioning new information, always pick NOTHING.\n"
-                         "If there is information said that wasn't mentioned througho   ut the conversation, use RETRIEVE MEMORY";
+                         "If there is information said that wasn't mentioned throughout the conversation, use RETRIEVE MEMORY";
     command_set.push_back(command);
 
 
