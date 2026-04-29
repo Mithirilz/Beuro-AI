@@ -120,8 +120,8 @@ dpp::task<void> BeuroAI::store_memory(dpp::cluster& Beuro){
         
         std::cout << summarised_text << std::endl;        
     }
-/*
-    chromaexec.store_message(result.body);
+
+    chromaexec.store_message(summarised_text);
     chromaexec.format_message("ChatHistory");
     chromaexec.display_messages("ChatHistory");
     chromaexec.inject_into_VDB("ChatHistory");
@@ -129,7 +129,7 @@ dpp::task<void> BeuroAI::store_memory(dpp::cluster& Beuro){
     sqlexec.InsertDataintoTable(
         chromaexec.Get_Chat_Data()
     );
-*/
+
     co_return;
 }
 
