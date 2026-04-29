@@ -231,7 +231,7 @@ int main() {
 
 dpp::task<void> owner_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro, BeuroAI& beuro_exec){
     if(event.msg.content.find("<@" + std::to_string(beuro.me.id) + ">") != std::string::npos || event.msg.is_dm()) {
-        co_await beuro_exec.Beuro_Response(event.msg.content, event, beuro);
+        auto AI_ProcessingStart = beuro_exec.Beuro_Response(event.msg.content, event, beuro);
         co_return;
     }
 
@@ -245,7 +245,7 @@ dpp::task<void> owner_message_commands(const dpp::message_create_t& event, dpp::
 
 dpp::task<void> general_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro, BeuroAI& beuro_exec){
     if(event.msg.content.find("<@" + std::to_string(beuro.me.id) + ">") != std::string::npos && !event.msg.is_dm()){
-        co_await beuro_exec.Beuro_Response(event.msg.content, event, beuro);
+        auto AI_ProcessingStart = beuro_exec.Beuro_Response(event.msg.content, event, beuro);
         co_return;
     }
 
