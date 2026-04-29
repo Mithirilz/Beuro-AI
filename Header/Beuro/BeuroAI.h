@@ -1,4 +1,5 @@
 #pragma once
+#include <mutex>
 #include <dpp/dpp.h>
 #include <unordered_map>
 #include <SQLiteCpp/SQLiteCpp.h>
@@ -32,7 +33,7 @@ class SQL_Execs{
         SQL_Execs(const std::string& FILEPATH) : BeuroDB{FILEPATH, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE}{}
         void CreateTable();
         dpp::job InsertDataintoTable(std::unordered_map<int, std::string> chat_set);
-        void GetAllInformationFromTable();
+        int getNumberofIDs();
         std::string GetInformationFromIDTargets();
         void GetIDTargets(std::vector<std::string> IDs);
 };
@@ -42,10 +43,21 @@ class BeuroAI{
         std::deque<std::unordered_map<std::string, std::string>> chat_history; 
         std::mutex chat_history_lock;
         ChromaDB_Execs chromaexec;
+        std::function<dpp::task<std::string>(const std::string& user_message, const dpp::message_create_t& event, dpp::cluster& Beuro)> decider = nullptr;
         SQL_Execs sqlexec;
 
     public:
-        BeuroAI(const std::string& FILEPATH, const std::string& PORT) : chromaexec("http", "127.0.0.1", PORT), sqlexec(FILEPATH){}
+        BeuroAI(const std::string& FILEPATH, const std::string& PORT) : chromaexec{"http", "127.0.0.1", PORT}, sqlexec{FILEPATH}{
+            int NumberofIDs = sqlexec.getNumberofIDs();
+
+            std::cout << NumberofIDs << std::endl;
+
+            if (NumberofIDs != 0){
+                this->decider = [this](const std::string &user_message, const dpp::message_create_t &event, dpp::cluster &Beuro){
+                    return make_a_decision(user_message, event, Beuro);
+                };
+            }
+        }
 
         dpp::task<void> Beuro_Response(std::string user_message, const dpp::message_create_t& event, dpp::cluster& Beuro);
         dpp::task<std::string> initiate_act(const std::string& DECISION, const std::string& content_message);

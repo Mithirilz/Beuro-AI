@@ -135,13 +135,8 @@ dpp::task<void> BeuroAI::store_memory(dpp::cluster& Beuro){
 
 dpp::task<void> BeuroAI::Beuro_Response(std::string user_message, const dpp::message_create_t& event, dpp::cluster& Beuro){
     dpp::async typing_status = Beuro.co_channel_typing(event.msg.channel_id);
-    
-    if (this->chat_history.size() > 250){
-        {
-            std::lock_guard<std::mutex> lock(this->chat_history_lock);
-            chat_history.erase(this->chat_history.begin(), this->chat_history.begin()+150);
-        }    
-    }
+    dpp::task<std::string> decision_task;
+    std::string final_message;
     
     if(!event.msg.is_dm()){
         std::string BOT_ID = ("<@" + std::to_string(Beuro.me.id) + ">");
@@ -151,16 +146,28 @@ dpp::task<void> BeuroAI::Beuro_Response(std::string user_message, const dpp::mes
     }
 
     const std::string content_message = "[" + event.msg.author.username + "] : " + user_message;
-    auto decision_results = make_a_decision(content_message, event, Beuro);
 
-    const std::string final_messsage = co_await initiate_act(
-        co_await decision_results,
-        content_message
-    );
+    if(this->decider){
+        decision_task = this->decider(user_message, event, Beuro);
+    }
+
+    if (this->chat_history.size() > 250){
+        {
+            std::lock_guard<std::mutex> lock(this->chat_history_lock);
+            chat_history.erase(this->chat_history.begin(), this->chat_history.begin()+150);
+        }    
+    }
+
+    if (this->decider){
+        final_message = co_await initiate_act(
+            co_await decision_task,
+            content_message
+        );
+    }
 
     std::unordered_map<std::string, std::string> user_chat;
     user_chat["role"] = "user";
-    user_chat["content"] = final_messsage;    
+    user_chat["content"] = final_message;    
     {
         std::lock_guard<std::mutex> lock(this->chat_history_lock);
         this->chat_history.push_back(user_chat);    
@@ -194,8 +201,7 @@ dpp::task<void> BeuroAI::Beuro_Response(std::string user_message, const dpp::mes
         co_return;
     }
 
-    auto json_Beuro = json::parse(response.body);
-    const std::string beuro_response = json_Beuro.at("message").at("content").get<std::string>();
+    const std::string beuro_response = json::parse(response.body).at("message").at("content").get<std::string>();
 
     co_await typing_status;
     event.co_reply(beuro_response);
@@ -208,11 +214,11 @@ dpp::task<void> BeuroAI::Beuro_Response(std::string user_message, const dpp::mes
         this->chat_history.push_back(beuro_chat);
     }
 
-    std::cout << final_messsage << std::endl;
+    std::cout << final_message << std::endl;
     std::cout << "Beuro: " + beuro_response << std::endl;
     std::cout << "__________________________________" << std::endl;
-
-    writeBeuro_ChatHistory(json_Beuro.at("message").at("content").get<std::string>(), event.msg.author.username, user_message);
+    
+    writeBeuro_ChatHistory(beuro_response, event.msg.author.username, user_message);
     co_return;
 }
 
