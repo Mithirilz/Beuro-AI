@@ -48,7 +48,7 @@ int SQL_Execs::getNumberofIDs(){
 
 std::string SQL_Execs::GetInformationFromIDTargets(){
     SQLite::Statement execution(BeuroDB, "SELECT * FROM ChatHistory WHERE ID = ?");
-    std::string chat = "Possibly-related past memories:\n";
+    std::string chat;
 
     for (const auto& ID : this->ID_targets){
         execution.bind(1, ID);
@@ -58,7 +58,7 @@ std::string SQL_Execs::GetInformationFromIDTargets(){
             std::string result = execution.getColumn(1);
             
             std::cout << "ID" << ID_result << std::endl;
-            chat = chat + result + "\n";
+            chat = result;
         }
 
         execution.reset();

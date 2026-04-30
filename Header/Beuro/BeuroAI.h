@@ -54,14 +54,15 @@ class BeuroAI{
 
             if (NumberofIDs != 0){
                 this->decider = [this](const std::string &user_message, const dpp::message_create_t &event, dpp::cluster &Beuro){
-                    return Decision_Maker(user_message, event, Beuro);
+                    return make_a_decision(user_message, event, Beuro);
                 };
             }
         }
 
         dpp::task<void> Beuro_Response(std::string user_message, const dpp::message_create_t& event, dpp::cluster& Beuro);
-        dpp::task<void> Beuro_Commands(const std::string& DECISION, const std::string& user_message);
-        dpp::task<std::string> Decision_Maker(const std::string& user_message, const dpp::message_create_t& event, dpp::cluster& Beuro);
+        dpp::task<std::string> initiate_act(const std::string& DECISION, const std::string& content_message);
+        dpp::task<void> store_memory(dpp::cluster& Beuro);
+        dpp::task<std::string> make_a_decision(const std::string user_message, const dpp::message_create_t& event, dpp::cluster& Beuro);
         dpp::job writeBeuro_ChatHistory(std::string beuro_chat, std::string user, std::string user_message);
 };
 
