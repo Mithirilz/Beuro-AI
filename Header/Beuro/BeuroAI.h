@@ -40,6 +40,7 @@ class SQL_Execs{
 
 class BeuroAI{
     private:
+        std::vector<dpp::task<void>> Task_Queue;
         std::deque<std::unordered_map<std::string, std::string>> chat_history; 
         std::mutex chat_history_lock;
         ChromaDB_Execs chromaexec;
@@ -53,12 +54,13 @@ class BeuroAI{
             std::cout << NumberofIDs << std::endl;
 
             if (NumberofIDs != 0){
-                this->decider = [this](const std::string &user_message, const dpp::message_create_t &event, dpp::cluster &Beuro){
+                this->decider = [this](const std::string &user_message, const dpp::message_create_t &event, dpp::cluster &Beuro)-> dpp::task<std::string>{
                     return make_a_decision(user_message, event, Beuro);
                 };
             }
         }
-
+        
+        void task_queue_manager();
         dpp::task<void> Beuro_Response(std::string user_message, const dpp::message_create_t& event, dpp::cluster& Beuro);
         dpp::task<std::string> initiate_act(const std::string& DECISION, const std::string& content_message);
         dpp::task<void> store_memory(dpp::cluster& Beuro);

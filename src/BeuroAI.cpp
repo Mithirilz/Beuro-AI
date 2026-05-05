@@ -7,6 +7,10 @@
 #include <mutex>
 using json = nlohmann::json;
 
+void BeuroAI::task_queue_manager(){
+    
+}
+
 dpp::task<std::string> BeuroAI::make_a_decision(const std::string user_message, const dpp::message_create_t& event, dpp::cluster& Beuro){    
     std::vector<std::unordered_map<std::string, std::string>> command_set;
     
