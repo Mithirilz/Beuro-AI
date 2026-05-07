@@ -123,18 +123,18 @@ int main() {
                 .set_image("https://i.pinimg.com/1200x/2f/b7/f0/2fb7f0eeac48317e044bc1e6a77b7b9f.jpg")
                 .set_thumbnail("https://i.pinimg.com/736x/67/5a/44/675a445db1cab22e1ba41ac62170117c.jpg")
                 .add_field(
-                "Explanation:",
-                "If I'm being honest, the future for this bot isn't clear as I'm still learning quite a lot of stuff. That's not to say there ISN'T a goal though."
+                    "Explanation:",
+                    "If I'm being honest, the future for this bot isn't clear as I'm still learning quite a lot of stuff. That's not to say there ISN'T a goal though."
                 )
                 .add_field(
-                "Goal:",
-               "- Finetune said AI",
-           false
+                    "Goal:",
+                    "- Finetune said AI",
+                    false
                 )
                 .add_field(
-            "Progress:",
-            "- Beuro has been turned into a discord bot officially!\n- Beuro now has some weird slashcommands\n- Beuro can now join VC\n- Beuro's a chatbot now",
-            false
+                    "Progress:",
+                    "- Beuro has been turned into a discord bot officially!\n- Beuro now has some weird slashcommands\n- Beuro can now join VC\n- Beuro's a chatbot now",
+                    false
                 )
                 .set_footer(
                     dpp::embed_footer()
@@ -203,7 +203,7 @@ int main() {
         }
     });
 
-    beuro.on_message_create([&beuro, &beuro_exec](const dpp::message_create_t& event) -> dpp::task<void> {
+    beuro.on_message_create([&beuro, &beuro_exec](const dpp::message_create_t& event)-> dpp::task<void> {
         if (event.msg.author.id == 640069711341813763){
             co_await owner_message_commands(event, beuro, beuro_exec);
             co_return;
@@ -215,14 +215,14 @@ int main() {
         }
     });
 
-    beuro.on_voice_state_update([](const dpp::voice_state_update_t& event){
+    beuro.on_voice_state_update([](const dpp::voice_state_update_t& event)-> dpp::task<void>{
         dpp::snowflake Owners_ID = 640069711341813763;
         auto GuildVC = dpp::find_guild(event.state.guild_id);
         auto Mithirilz = GuildVC->voice_members.find(Owners_ID);
 
         if (Mithirilz == GuildVC->voice_members.end()){
             event.from()->disconnect_voice(event.state.guild_id);
-            return;
+            co_return;
         }
     });
         
@@ -237,8 +237,10 @@ dpp::task<void> owner_message_commands(const dpp::message_create_t& event, dpp::
 
     else if(event.msg.content.find("Beuro shutdown") || event.msg.content.find("beuro shutdown") != std::string::npos){
         auto storage_process = beuro_exec.store_memory(beuro);
+        
         event.co_reply("Shutting down in a few seconds...");
         co_await storage_process;
+
         beuro.shutdown();
     }
 }

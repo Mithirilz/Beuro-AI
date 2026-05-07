@@ -1,4 +1,5 @@
 #pragma once
+#include <atomic>
 #include <mutex>
 #include <dpp/dpp.h>
 #include <unordered_map>
@@ -17,7 +18,7 @@ class ChromaDB_Execs{
         void display_messages(const std::string& collection_name);
         std::unordered_map<int, std::string> Get_Chat_Data();
         void inject_into_VDB(const std::string& collection_name);
-        void DoesCollectionExist();
+        void is_collection_exist();
         void store_message(const std::string message);
         void GetAllInfoFromCollection(const std::string& collection_name);
         std::vector<std::string> SearchThroughVDB(const std::vector<std::string>& query_data);
@@ -40,31 +41,23 @@ class SQL_Execs{
 
 class BeuroAI{
     private:
-        std::vector<dpp::task<void>> Task_Queue;
-        std::deque<std::unordered_map<std::string, std::string>> chat_history; 
-        std::mutex chat_history_lock;
-        ChromaDB_Execs chromaexec;
-        std::function<dpp::task<std::string>(const std::string& user_message, const dpp::message_create_t& event, dpp::cluster& Beuro)> decider = nullptr;
-        SQL_Execs sqlexec;
+        std::deque<dpp::task<std::string>> m_Priority_Queue;
+        std::vector<dpp::task<void>> m_User_Queue;
+        std::deque<std::unordered_map<std::string, std::string>> m_chat_history; 
+        std::mutex m_chat_history_lock;
+        ChromaDB_Execs m_chromaexec;
+        std::function<dpp::task<std::string>(const std::string& user_message, const dpp::message_create_t& event, dpp::cluster& Beuro)> m_decider = nullptr;
+        SQL_Execs m_sqlexec;
+        std::atomic<bool> m_is_processing = false;
 
     public:
-        BeuroAI(const std::string& FILEPATH, const std::string& PORT) : chromaexec{"http", "127.0.0.1", PORT}, sqlexec{FILEPATH}{
-            int NumberofIDs = sqlexec.getNumberofIDs();
-
-            std::cout << NumberofIDs << std::endl;
-
-            if (NumberofIDs != 0){
-                this->decider = [this](const std::string &user_message, const dpp::message_create_t &event, dpp::cluster &Beuro)-> dpp::task<std::string>{
-                    return make_a_decision(user_message, event, Beuro);
-                };
-            }
-        }
+        BeuroAI(const std::string& FILEPATH, const std::string& PORT);
         
-        void task_queue_manager();
+        void manage_task_queue(std::string user_message, const dpp::message_create_t &event, dpp::cluster &Beuro);
         dpp::task<void> Beuro_Response(std::string user_message, const dpp::message_create_t& event, dpp::cluster& Beuro);
         dpp::task<std::string> initiate_act(const std::string& DECISION, const std::string& content_message);
         dpp::task<void> store_memory(dpp::cluster& Beuro);
         dpp::task<std::string> make_a_decision(const std::string user_message, const dpp::message_create_t& event, dpp::cluster& Beuro);
-        dpp::job writeBeuro_ChatHistory(std::string beuro_chat, std::string user, std::string user_message);
+        dpp::job savetxtfile_chat_history(std::string beuro_chat, std::string user, std::string user_message);
 };
 

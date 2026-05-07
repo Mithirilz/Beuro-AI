@@ -7,8 +7,29 @@
 #include <mutex>
 using json = nlohmann::json;
 
-void BeuroAI::task_queue_manager(){
-    
+BeuroAI::BeuroAI(const std::string& FILEPATH, const std::string& PORT) : m_chromaexec{"http", "127.0.0.1", PORT}, m_sqlexec{FILEPATH}{
+    int NumberofIDs = m_sqlexec.getNumberofIDs();
+    std::cout << NumberofIDs << std::endl;
+
+    if (NumberofIDs != 0){
+        m_decider = [this](const std::string &user_message, const dpp::message_create_t &event, dpp::cluster &Beuro)-> dpp::task<std::string>{
+            return make_a_decision(user_message, event, Beuro);
+        };
+    }
+}
+
+void BeuroAI::manage_task_queue(std::string user_message, const dpp::message_create_t &event, dpp::cluster &Beuro){
+    if (m_is_processing){
+        std::unordered_map<std::string, std::string> user_chat;
+        user_chat["role"] = "user";
+        user_chat["content"] = user_message;
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(m_chat_history_lock);
+
+
+    }
 }
 
 dpp::task<std::string> BeuroAI::make_a_decision(const std::string user_message, const dpp::message_create_t& event, dpp::cluster& Beuro){    
@@ -55,11 +76,11 @@ dpp::task<std::string> BeuroAI::initiate_act(const std::string& DECISION, const 
     else if(DECISION == "RETRIEVE MEMORY"){
         std::cout << "Beuro ENGAGED RAG (RETRIEVAL)" << std::endl;
 
-        sqlexec.GetIDTargets(
-            chromaexec.SearchThroughVDB({content_message})
+        m_sqlexec.GetIDTargets(
+            m_chromaexec.SearchThroughVDB({content_message})
         );
 
-        const std::string final_message = "[Context/Memory]:\n" + sqlexec.GetInformationFromIDTargets() + "\n\n" + content_message;
+        const std::string final_message = "[Context/Memory]:\n" + m_sqlexec.GetInformationFromIDTargets() + "\n\n" + content_message;
 
         co_return final_message;
     }
@@ -71,28 +92,26 @@ dpp::task<std::string> BeuroAI::initiate_act(const std::string& DECISION, const 
 }
 
 dpp::task<void> BeuroAI::store_memory(dpp::cluster& Beuro){
-    const int NUMBER_OF_SUMMARIES = 3;
-    
-    std::string summarised_text;
-    std::string next_prompt;
-
     std::vector<std::string> summaries;
     summaries.reserve(3);
-
+    
     json message_to_send;
-
     std::unordered_map<std::string, std::string> user_chat;
     user_chat["role"] = "user";
     user_chat["content"] = "END OF CONVERSATION";
     {
-        std::lock_guard<std::mutex> lock(this->chat_history_lock);
-        this->chat_history.push_back(user_chat);
-
+        std::lock_guard<std::mutex> lock(m_chat_history_lock);
+        m_chat_history.push_back(user_chat);
+        
         message_to_send["model"] = "Summariser";
-        message_to_send["messages"] = chat_history;
+        message_to_send["messages"] = m_chat_history;
         message_to_send["stream"] = false;
     }
     
+    const int NUMBER_OF_SUMMARIES = 3;
+    std::string summarised_text;
+    std::string next_prompt;
+
     //Refine summary 3 times before completely shutting down
     for (int i = 0; i < NUMBER_OF_SUMMARIES; i++) {
         auto result = co_await Beuro.co_request(
@@ -106,8 +125,8 @@ dpp::task<void> BeuroAI::store_memory(dpp::cluster& Beuro){
             break;
         }
 
-        if (result.body.find("NULL") != std::string::npos ){
-            break;            
+        if (result.body.find("NULL") != std::string::npos){
+            break;
         }
 
         summarised_text = json::parse(result.body).at("message").at("content").get<std::string>();
@@ -116,22 +135,22 @@ dpp::task<void> BeuroAI::store_memory(dpp::cluster& Beuro){
         next_prompt = "Cross check this summary for missing or incorrect details send the refined version:\n\n" + summaries[i] + "\n\nIf no changes are needed, return NULL";
         user_chat["content"] = next_prompt;
         {
-            std::lock_guard<std::mutex> lock(this->chat_history_lock);
+            std::lock_guard<std::mutex> lock(m_chat_history_lock);
             
-            this->chat_history.push_back(user_chat);
-            message_to_send["messages"] = chat_history;
+            m_chat_history.push_back(user_chat);
+            message_to_send["messages"] = m_chat_history;
         }
         
         std::cout << summarised_text << std::endl;        
     }
 
-    chromaexec.store_message(summarised_text);
-    chromaexec.format_message("ChatHistory");
-    chromaexec.display_messages("ChatHistory");
-    chromaexec.inject_into_VDB("ChatHistory");
+    m_chromaexec.store_message(summarised_text);
+    m_chromaexec.format_message("ChatHistory");
+    m_chromaexec.display_messages("ChatHistory");
+    m_chromaexec.inject_into_VDB("ChatHistory");
 
-    sqlexec.InsertDataintoTable(
-        chromaexec.Get_Chat_Data()
+    m_sqlexec.InsertDataintoTable(
+        m_chromaexec.Get_Chat_Data()
     );
 
     co_return;
@@ -140,7 +159,6 @@ dpp::task<void> BeuroAI::store_memory(dpp::cluster& Beuro){
 dpp::task<void> BeuroAI::Beuro_Response(std::string user_message, const dpp::message_create_t& event, dpp::cluster& Beuro){
     dpp::async typing_status = Beuro.co_channel_typing(event.msg.channel_id);
     dpp::task<std::string> decision_task;
-    std::string final_message;
     
     if(!event.msg.is_dm()){
         std::string BOT_ID = ("<@" + std::to_string(Beuro.me.id) + ">");
@@ -151,18 +169,20 @@ dpp::task<void> BeuroAI::Beuro_Response(std::string user_message, const dpp::mes
 
     const std::string content_message = "[" + event.msg.author.username + "] : " + user_message;
 
-    if(this->decider){
-        decision_task = this->decider(user_message, event, Beuro);
+    if(m_decider){
+        decision_task = m_decider(user_message, event, Beuro);
     }
 
-    if (this->chat_history.size() > 250){
+    if(m_chat_history.size() > 250){
         {
-            std::lock_guard<std::mutex> lock(this->chat_history_lock);
-            chat_history.erase(this->chat_history.begin(), this->chat_history.begin()+150);
+            std::lock_guard<std::mutex> lock(m_chat_history_lock);
+            m_chat_history.erase(m_chat_history.begin(), m_chat_history.begin()+150);
         }    
     }
 
-    if (this->decider){
+    std::string final_message;
+
+    if (m_decider){
         final_message = co_await initiate_act(
             co_await decision_task,
             content_message
@@ -173,15 +193,15 @@ dpp::task<void> BeuroAI::Beuro_Response(std::string user_message, const dpp::mes
     user_chat["role"] = "user";
     user_chat["content"] = final_message;    
     {
-        std::lock_guard<std::mutex> lock(this->chat_history_lock);
-        this->chat_history.push_back(user_chat);    
+        std::lock_guard<std::mutex> lock(m_chat_history_lock);
+        m_chat_history.push_back(user_chat);    
     }
     
     json message_to_send;
     {
-        std::lock_guard<std::mutex> lock(this->chat_history_lock);
+        std::lock_guard<std::mutex> lock(m_chat_history_lock);
         message_to_send["model"] = "Beuro-proto";
-        message_to_send["messages"] = chat_history;
+        message_to_send["messages"] = m_chat_history;
         message_to_send["stream"] = false;
     }
 
@@ -197,9 +217,9 @@ dpp::task<void> BeuroAI::Beuro_Response(std::string user_message, const dpp::mes
         event.co_reply("ZzzZZzz...");
         std::cout << "Self-debug: Bot is either not on or faces a different error (" << response.status << ")";
         {
-            std::lock_guard<std::mutex> lock(chat_history_lock);
-            this->chat_history.pop_back();
-            this->chat_history.pop_back();
+            std::lock_guard<std::mutex> lock(m_chat_history_lock);
+            m_chat_history.pop_back();
+            m_chat_history.pop_back();
         }
         
         co_return;
@@ -214,19 +234,19 @@ dpp::task<void> BeuroAI::Beuro_Response(std::string user_message, const dpp::mes
     beuro_chat["role"] = "assistant";
     beuro_chat["content"] = beuro_response;
     {
-        std::lock_guard<std::mutex> lock(this->chat_history_lock);
-        this->chat_history.push_back(beuro_chat);
+        std::lock_guard<std::mutex> lock(m_chat_history_lock);
+        m_chat_history.push_back(beuro_chat);
     }
 
     std::cout << final_message << std::endl;
     std::cout << "Beuro: " + beuro_response << std::endl;
     std::cout << "__________________________________" << std::endl;
     
-    writeBeuro_ChatHistory(beuro_response, event.msg.author.username, user_message);
+    savetxtfile_chat_history(beuro_response, event.msg.author.username, user_message);
     co_return;
 }
 
-dpp::job BeuroAI::writeBeuro_ChatHistory(std::string beuro_chat, std::string user, std::string user_message){
+dpp::job BeuroAI::savetxtfile_chat_history(std::string beuro_chat, std::string user, std::string user_message){
     std::ofstream RecordHistory;
 
     RecordHistory.open("History.txt", std::ofstream::app);

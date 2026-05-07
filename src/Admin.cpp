@@ -83,7 +83,7 @@ void ChromaDB_Execs::inject_into_VDB(const std::string& collection_name){
     return;
 }
 
-void ChromaDB_Execs::DoesCollectionExist(){
+void ChromaDB_Execs::is_collection_exist(){
     std::cout << BeuroVDB.GetHeartbeat() << std::endl;
 
     if(!BeuroVDB.CollectionExists("ChatHistory")) {
