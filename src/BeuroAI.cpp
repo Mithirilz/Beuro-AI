@@ -19,17 +19,16 @@ BeuroAI::BeuroAI(const std::string& FILEPATH, const std::string& PORT) : m_chrom
 }
 
 void BeuroAI::manage_task_queue(std::string user_message, const dpp::message_create_t &event, dpp::cluster &Beuro){
-    if (m_is_processing){
-        std::unordered_map<std::string, std::string> user_chat;
-        user_chat["role"] = "user";
-        user_chat["content"] = user_message;
+    if (!m_is_processing){
+        auto start_processing = Beuro_Response(user_message, event,Beuro);
+        return;
     }
 
-    {
-        std::lock_guard<std::mutex> lock(m_chat_history_lock);
+    std::unordered_map<std::string, std::string> user_chat;
+    user_chat["role"] = "user";
+    user_chat["content"] = user_message;
 
-
-    }
+    m_is_processing.wait(m_is_processing);
 }
 
 dpp::task<std::string> BeuroAI::make_a_decision(const std::string user_message, const dpp::message_create_t& event, dpp::cluster& Beuro){    
