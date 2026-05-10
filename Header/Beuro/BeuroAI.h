@@ -46,7 +46,7 @@ class BeuroAI{
         std::deque<std::unordered_map<std::string, std::string>> m_chat_history; 
         std::mutex m_chat_history_lock;
         ChromaDB_Execs m_chromaexec;
-        std::function<dpp::task<std::string>(const std::string& user_message, const dpp::message_create_t& event, dpp::cluster& Beuro)> m_decider = nullptr;
+        std::function<dpp::task<std::string>(const std::string& user_message, const dpp::message_create_t& event, dpp::cluster& Beuro)> m_is_decider_active = nullptr;
         SQL_Execs m_sqlexec;
         std::atomic<bool> m_is_processing = false;
 
