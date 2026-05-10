@@ -168,8 +168,8 @@ dpp::task<void> BeuroAI::Beuro_Response(std::string user_message, const dpp::mes
 
     const std::string content_message = "[" + event.msg.author.username + "] : " + user_message;
 
-    if(m_decider){
-        decision_task = m_decider(user_message, event, Beuro);
+    if(m_is_decider_active){
+        decision_task = m_is_decider_active(user_message, event, Beuro);
     }
 
     if(m_chat_history.size() > 250){
@@ -181,7 +181,7 @@ dpp::task<void> BeuroAI::Beuro_Response(std::string user_message, const dpp::mes
 
     std::string final_message;
 
-    if (m_decider){
+    if (m_is_decider_active){
         final_message = co_await initiate_act(
             co_await decision_task,
             content_message
