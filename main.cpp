@@ -1,4 +1,5 @@
 #include "Beuro/BeuroAI.h"
+#include "message.h"
 #include <dpp/dpp.h>
 #include <dotenv.h>
 

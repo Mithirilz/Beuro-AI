@@ -12,23 +12,43 @@ BeuroAI::BeuroAI(const std::string& FILEPATH, const std::string& PORT) : m_chrom
     std::cout << NumberofIDs << std::endl;
 
     if (NumberofIDs != 0){
-        m_decider = [this](const std::string &user_message, const dpp::message_create_t &event, dpp::cluster &Beuro)-> dpp::task<std::string>{
+        m_is_decider_active = [this](const std::string &user_message, const dpp::message_create_t &event, dpp::cluster &Beuro)->dpp::task<std::string>{
             return make_a_decision(user_message, event, Beuro);
         };
     }
 }
 
-void BeuroAI::manage_task_queue(std::string user_message, const dpp::message_create_t &event, dpp::cluster &Beuro){
-    if (!m_is_processing){
-        auto start_processing = Beuro_Response(user_message, event,Beuro);
-        return;
+dpp::task<void> BeuroAI::manage_task_queue(std::string user_message, const dpp::message_create_t& event, dpp::cluster& Beuro){
+    dpp::task<void> awaitable;
+    
+    if(m_is_priority){
+        awaitable = m_is_priority();
+    }
+    
+    if(!event.msg.is_dm() || event.msg.type != dpp::message_type::mt_reply){
+        std::string BOT_ID = ("<@" + std::to_string(Beuro.me.id) + ">");
+        auto BOT_ID_index = user_message.find(BOT_ID);
+        
+        user_message.erase(BOT_ID_index, BOT_ID.length());
     }
 
-    std::unordered_map<std::string, std::string> user_chat;
-    user_chat["role"] = "user";
-    user_chat["content"] = user_message;
+    std::string message_to_append = "[User:" + event.msg.author.username + "]: " + user_message + "\n";
+    m_User_Queue = m_User_Queue + message_to_append;
 
-    m_is_processing.wait(m_is_processing);
+    if(m_is_priority){
+        co_await awaitable;
+    }
+    
+    //Have a way to wait for the priority message to finish before sending
+    //Method 1: Have an if statement checking for the current running priority message's completion
+    
+    co_return;
+}
+
+dpp::task<void> BeuroAI::set_priority(){
+    
+    
+    co_return;
 }
 
 dpp::task<std::string> BeuroAI::make_a_decision(const std::string user_message, const dpp::message_create_t& event, dpp::cluster& Beuro){    
@@ -159,7 +179,7 @@ dpp::task<void> BeuroAI::Beuro_Response(std::string user_message, const dpp::mes
     dpp::async typing_status = Beuro.co_channel_typing(event.msg.channel_id);
     dpp::task<std::string> decision_task;
     
-    if(!event.msg.is_dm()){
+    if(!event.msg.is_dm() || event.msg.type != dpp::message_type::mt_reply){
         std::string BOT_ID = ("<@" + std::to_string(Beuro.me.id) + ">");
         auto BOT_ID_index = user_message.find(BOT_ID);
         
