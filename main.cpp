@@ -23,8 +23,8 @@ int main() {
 
     beuro.on_log(dpp::utility::cout_logger());
     
-    beuro.on_slashcommand([](const dpp::slashcommand_t& event)->dpp::task<void> {
-        if (event.command.get_command_name() == "neuro") {
+    beuro.on_slashcommand([](const dpp::slashcommand_t& event)->dpp::task<void>{
+        if (event.command.get_command_name() == "neuro"){
             co_await event.co_reply("https://cdn.discordapp.com/attachments/1072697081443131476/1439145564070740048/oo_ee_oo-1.mov?ex=692de380&is=692c9200&hm=c7eaedf245cf27b26b2e520a32b38d6d945c0e53f3ad1df93f66e7450977e89b&");
             debugger(event);
         }
@@ -34,7 +34,7 @@ int main() {
             debugger(event);
         }
 
-        else if (event.command.get_command_name() == "soyjack") {
+        else if (event.command.get_command_name() == "soyjack"){
             dpp::embed Soyjack;
             
             Soyjack
@@ -51,7 +51,7 @@ int main() {
             debugger(event);
         }
 
-        else if (event.command.get_command_name() == "hex") {
+        else if (event.command.get_command_name() == "hex"){
             dpp::embed Hex;
 
             Hex
@@ -71,7 +71,7 @@ int main() {
             debugger(event);
         }
 
-        else if (event.command.get_command_name() == "bot_inquiry") {
+        else if (event.command.get_command_name() == "bot_inquiry"){
             dpp::embed Beuro;
             
             Beuro
@@ -110,7 +110,7 @@ int main() {
             debugger(event);    
         }
 
-        else if (event.command.get_command_name() == "future_devs") {
+        else if (event.command.get_command_name() == "future_devs"){
             dpp::embed Explanation;
 
             Explanation
@@ -172,8 +172,7 @@ int main() {
     
 
     beuro.on_ready([&beuro](const dpp::ready_t& event){
-        if (dpp::run_once<struct register_bot_commands>()) {
-
+        if (dpp::run_once<struct register_bot_commands>()){
             beuro.guild_bulk_command_create({
                 dpp::slashcommand("join", "Beuro VC test", beuro.me.id),
                 dpp::slashcommand("ai_baby", "golshi", beuro.me.id),
@@ -204,7 +203,11 @@ int main() {
         }
     });
 
-    beuro.on_message_create([&beuro, &beuro_exec](const dpp::message_create_t& event)-> dpp::task<void> {
+    beuro.on_message_create([&beuro, &beuro_exec](const dpp::message_create_t& event)-> dpp::task<void>{
+        if (event.msg.type != dpp::message_type::mt_reply){
+            auto AI_ProcessingStart = beuro_exec.Beuro_Response(event.msg.content, event, beuro);
+        }
+
         if (event.msg.author.id == 640069711341813763){
             co_await owner_message_commands(event, beuro, beuro_exec);
             co_return;
@@ -217,7 +220,7 @@ int main() {
     });
 
     beuro.on_voice_state_update([](const dpp::voice_state_update_t& event)-> dpp::task<void>{
-        dpp::snowflake Owners_ID = 640069711341813763;
+        dpp::snowflake Owners_ID = dotenv::getenv("OWNERS_ID");
         auto GuildVC = dpp::find_guild(event.state.guild_id);
         auto Mithirilz = GuildVC->voice_members.find(Owners_ID);
 
@@ -231,7 +234,7 @@ int main() {
 }
 
 dpp::task<void> owner_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro, BeuroAI& beuro_exec){
-    if(event.msg.content.find("<@" + std::to_string(beuro.me.id) + ">") != std::string::npos || event.msg.is_dm()) {
+    if(event.msg.content.find("<@" + std::to_string(beuro.me.id) + ">") != std::string::npos || event.msg.is_dm() || event.msg.type == dpp::message_type::mt_reply){
         auto AI_ProcessingStart = beuro_exec.Beuro_Response(event.msg.content, event, beuro);
         co_return;
     }
@@ -247,13 +250,17 @@ dpp::task<void> owner_message_commands(const dpp::message_create_t& event, dpp::
 }
 
 dpp::task<void> general_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro, BeuroAI& beuro_exec){
-    if(event.msg.content.find("<@" + std::to_string(beuro.me.id) + ">") != std::string::npos && !event.msg.is_dm()){
+    if(event.msg.is_dm()){
+        co_return;
+    }
+    
+    if(event.msg.content.find("<@" + std::to_string(beuro.me.id) + ">") != std::string::npos || event.msg.type == dpp::message_type::mt_reply){
         auto AI_ProcessingStart = beuro_exec.Beuro_Response(event.msg.content, event, beuro);
         co_return;
     }
 
     else if(event.msg.content.find("Beuro shutdown") != std::string::npos || event.msg.content.find("beuro shutdown") != std::string::npos){
-        co_await event.co_reply("Written by Mithirilz: \"sybau\"");
+        event.co_reply("Written by Mithirilz: \"sybau\"");
         co_return;
     }
 }

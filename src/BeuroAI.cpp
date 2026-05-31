@@ -87,7 +87,7 @@ dpp::task<std::string> BeuroAI::make_a_decision(const std::string user_message, 
 }
 
 dpp::task<std::string> BeuroAI::initiate_act(const std::string& DECISION, const std::string& content_message){
-    if (DECISION == "NOTHING"){
+    if(DECISION == "NOTHING"){
         std::cout << "Beuro did NOTHING" << std::endl;
         co_return content_message;
     }
@@ -201,7 +201,7 @@ dpp::task<void> BeuroAI::Beuro_Response(std::string user_message, const dpp::mes
 
     std::string final_message;
 
-    if (m_is_decider_active){
+    if(m_is_decider_active){
         final_message = co_await initiate_act(
             co_await decision_task,
             content_message
