@@ -16,28 +16,28 @@ int main(int argc, char* argv[]){
     for(int i = 0; i < argc; i++){
         if(static_cast<std::string>(argv[i]) == "-y"){
             beuro_setup.is_on = true;
+            std::cout << "Beuro's AI is active." << std::endl;
         }
 
         if(static_cast<std::string>(argv[i]) == "-n"){
             beuro_setup.is_on = false;
+            std::cout << "Beuro's AI is not active." << std::endl;
         }
     }
 
-    if(beuro_setup.is_on){
-        std::cout << "Beuro's AI is active." << std::endl;
-    } else{
-        std::cout << "Beuro's AI is not active." << std::endl;
-    }
-
-    return 0;
 
     dotenv::init();
     const std::string BOT_TOKEN = dotenv::getenv("BOT_TOKEN", "None");
     const std::string FILEPATH = dotenv::getenv("FILEPATH", "None");
     const std::string PORT = dotenv::getenv("PORT", "None");
     
-    if (BOT_TOKEN == "None" || FILEPATH == "None" || PORT == "None"){
+    if(BOT_TOKEN == "None" || FILEPATH == "None" || PORT == "None"){
         std::cout << "One of the Env's are not valid" << std::endl;
+
+        std::cout << BOT_TOKEN << std::endl;
+        std::cout << FILEPATH<< std::endl;
+        std::cout << PORT << std::endl;
+
         return 0;
     }
     
@@ -227,7 +227,12 @@ int main(int argc, char* argv[]){
         }
     });
 
-    beuro.on_message_create([&beuro, &beuro_exec](const dpp::message_create_t& event) -> dpp::task<void> {
+    beuro.on_message_create([&beuro, &beuro_exec, &beuro_setup](const dpp::message_create_t& event) -> dpp::task<void> {
+        if(!beuro_setup.is_on){
+            event.co_send("Written by Mithirilz: Sorry Beuro is sleeping right now\"");
+            co_return;
+        }
+
         if (event.msg.author.id == 640069711341813763){
             co_await owner_message_commands(event, beuro, beuro_exec);
             co_return;
