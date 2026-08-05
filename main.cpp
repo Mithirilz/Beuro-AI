@@ -248,35 +248,41 @@ int main(int argc, char* argv[]){
 }
 
 dpp::task<void> owner_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro, std::optional<BeuroAI>& beuro_exec){
-    if(event.msg.content.find("Beuro shutdown") != std::string::npos || event.msg.content.find("beuro shutdown") != std::string::npos){
+    const bool is_activate_shutdown = event.msg.content.find("Beuro shutdown") != std::string::npos || event.msg.content.find("beuro shutdown") != std::string::npos;
+    const bool is_pinged = event.msg.content.find("<@" + std::to_string(beuro.me.id) + ">") != std::string::npos;
+
+    if(is_activate_shutdown && !beuro_exec.has_value()){
         auto storage_process = beuro_exec->store_memory(beuro);
         event.co_reply("Shutting down in a few seconds...");
         co_await storage_process;
         beuro.shutdown();
     }
 
-    if((event.msg.content.find("<@" + std::to_string(beuro.me.id) + ">") != std::string::npos || event.msg.is_dm()) && !beuro_exec.has_value()){
+    if((is_pinged && !beuro_exec.has_value()) || (event.msg.is_dm() && !beuro_exec.has_value())){
         event.co_send("Note to Mithirilz: \"She's turned off dumbass\"");
     }
     
-    if((event.msg.content.find("<@" + std::to_string(beuro.me.id) + ">") != std::string::npos || event.msg.is_dm()) && beuro_exec.has_value()){
+    if((is_pinged && beuro_exec.has_value()) || (event.msg.is_dm() && beuro_exec.has_value())){
         auto AI_ProcessingStart = beuro_exec->Beuro_Response(event.msg.content, event, beuro);
         co_return;
     }
 }
 
 dpp::task<void> general_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro, std::optional<BeuroAI>& beuro_exec){
-    if(event.msg.content.find("Beuro shutdown") != std::string::npos || event.msg.content.find("beuro shutdown") != std::string::npos){
+    const bool is_activate_shutdown = event.msg.content.find("Beuro shutdown") != std::string::npos || event.msg.content.find("beuro shutdown") != std::string::npos;
+    const bool is_pinged = event.msg.content.find("<@" + std::to_string(beuro.me.id) + ">") != std::string::npos;
+
+    if(is_activate_shutdown){
         co_await event.co_reply("Written by Mithirilz: \"sybau\"");
         co_return;
     }
 
-    if(event.msg.content.find("<@" + std::to_string(beuro.me.id) + ">") != std::string::npos && !beuro_exec.has_value()){
+    if(is_pinged && !event.msg.is_dm() && !beuro_exec.has_value()){
         event.co_send("Sorry! I'm being tinkered with currently...\n"
                       "okay I have to go, my dad is telling me to stay still");
     }
 
-    if(event.msg.content.find("<@" + std::to_string(beuro.me.id) + ">") != std::string::npos && !event.msg.is_dm() && beuro_exec.has_value()){
+    if(is_pinged && !event.msg.is_dm() && beuro_exec.has_value()){
         auto AI_ProcessingStart = beuro_exec->Beuro_Response(event.msg.content, event, beuro);
         co_return;
     }
