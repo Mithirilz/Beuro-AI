@@ -40,7 +40,7 @@ class SQL_Execs{
 
 class BeuroAI{
     private:
-        std::deque<std::unordered_map<std::string, std::string>> chat_history; 
+        std::deque<std::unordered_map<std::string, std::string>> chat_history;
         std::mutex chat_history_lock;
         ChromaDB_Execs chromaexec;
         std::function<dpp::task<std::string>(const std::string& user_message, const dpp::message_create_t& event, dpp::cluster& Beuro)> decider = nullptr;
