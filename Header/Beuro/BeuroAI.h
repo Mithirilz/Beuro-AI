@@ -43,8 +43,8 @@ class BeuroAI{
         std::deque<std::unordered_map<std::string, std::string>> chat_history;
         std::mutex chat_history_lock;
         ChromaDB_Execs chromaexec;
-        std::function<dpp::task<std::string>(const std::string& user_message, const dpp::message_create_t& event, dpp::cluster& Beuro)> decider = nullptr;
         SQL_Execs sqlexec;
+        std::function<dpp::task<std::string>(const std::string& user_message, const dpp::message_create_t& event, dpp::cluster& Beuro)> decider = nullptr;
 
     public:
         BeuroAI(const std::string& FILEPATH, const std::string& PORT) : chromaexec{"http", "127.0.0.1", PORT}, sqlexec{FILEPATH}{
