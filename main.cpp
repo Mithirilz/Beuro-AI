@@ -249,17 +249,28 @@ int main(int argc, char* argv[]){
 
 dpp::task<void> owner_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro, std::optional<BeuroAI>& beuro_exec){
     const bool is_activate_shutdown = event.msg.content.find("Beuro shutdown") != std::string::npos || event.msg.content.find("beuro shutdown") != std::string::npos;
+    const bool is_activate_no_store_shutdown = event.msg.content.find("analysis mode: no-store shutdown") || event.msg.content.find("Analysis mode: no-store shutdown");
     const bool is_pinged = event.msg.content.find("<@" + std::to_string(beuro.me.id) + ">") != std::string::npos;
 
-    if(is_activate_shutdown && !beuro_exec.has_value()){
+    if(is_activate_shutdown && beuro_exec.has_value()){
         auto storage_process = beuro_exec->store_memory(beuro);
         event.co_reply("Shutting down in a few seconds...");
         co_await storage_process;
         beuro.shutdown();
+
+        co_return;
+    }
+
+    if(is_activate_no_store_shutdown){
+        co_await event.co_send("DEBUG: NO-STORE SHUTDOWN");
+        beuro.shutdown();
+
+        co_return;
     }
 
     if((is_pinged && !beuro_exec.has_value()) || (event.msg.is_dm() && !beuro_exec.has_value())){
         event.co_send("Note to Mithirilz: \"She's turned off dumbass\"");
+        co_return;
     }
     
     if((is_pinged && beuro_exec.has_value()) || (event.msg.is_dm() && beuro_exec.has_value())){
@@ -280,6 +291,7 @@ dpp::task<void> general_message_commands(const dpp::message_create_t& event, dpp
     if(is_pinged && !event.msg.is_dm() && !beuro_exec.has_value()){
         event.co_send("Sorry! I'm being tinkered with currently...\n"
                       "okay I have to go, my dad is telling me to stay still");
+        co_return;
     }
 
     if(is_pinged && !event.msg.is_dm() && beuro_exec.has_value()){
