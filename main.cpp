@@ -6,7 +6,31 @@ dpp::task<void> general_message_commands(const dpp::message_create_t& event, dpp
 dpp::task<void> owner_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro, BeuroAI& beuro_exec);
 dpp::job debugger(const dpp::slashcommand_t event);
 
-int main() {
+struct settings{
+    bool is_on = false;
+};
+
+int main(int argc, char* argv[]){
+    settings beuro_setup; 
+
+    for(int i = 0; i < argc; i++){
+        if(static_cast<std::string>(argv[i]) == "-y"){
+            beuro_setup.is_on = true;
+        }
+
+        if(static_cast<std::string>(argv[i]) == "-n"){
+            beuro_setup.is_on = false;
+        }
+    }
+
+    if(beuro_setup.is_on){
+        std::cout << "Beuro's AI is active." << std::endl;
+    } else{
+        std::cout << "Beuro's AI is not active." << std::endl;
+    }
+
+    return 0;
+
     dotenv::init();
     const std::string BOT_TOKEN = dotenv::getenv("BOT_TOKEN", "None");
     const std::string FILEPATH = dotenv::getenv("FILEPATH", "None");
