@@ -1,47 +1,41 @@
 #include "Beuro/BeuroAI.h"
 #include <dpp/dpp.h>
 #include <dotenv.h>
+#include <optional>
 
-dpp::task<void> general_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro, BeuroAI& beuro_exec);
-dpp::task<void> owner_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro, BeuroAI& beuro_exec);
+dpp::task<void> owner_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro, std::optional<BeuroAI>& beuro_exec);
+dpp::task<void> general_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro, std::optional<BeuroAI>& beuro_exec);
 dpp::job debugger(const dpp::slashcommand_t event);
 
-struct settings{
-    bool is_on = false;
-};
-
 int main(int argc, char* argv[]){
-    settings beuro_setup; 
-
-    for(int i = 0; i < argc; i++){
-        if(static_cast<std::string>(argv[i]) == "-y"){
-            beuro_setup.is_on = true;
-            std::cout << "Beuro's AI is active." << std::endl;
-        }
-
-        if(static_cast<std::string>(argv[i]) == "-n"){
-            beuro_setup.is_on = false;
-            std::cout << "Beuro's AI is not active." << std::endl;
-        }
-    }
-
-
     dotenv::init();
     const std::string BOT_TOKEN = dotenv::getenv("BOT_TOKEN", "None");
     const std::string FILEPATH = dotenv::getenv("FILEPATH", "None");
     const std::string PORT = dotenv::getenv("PORT", "None");
-    
-    if(BOT_TOKEN == "None" || FILEPATH == "None" || PORT == "None"){
-        std::cout << "One of the Env's are not valid" << std::endl;
 
-        std::cout << BOT_TOKEN << std::endl;
-        std::cout << FILEPATH<< std::endl;
-        std::cout << PORT << std::endl;
-
+    if(BOT_TOKEN == "None"){
+        std::cout << "Invalid bot token." << std::endl;
         return 0;
     }
-    
-    BeuroAI beuro_exec(FILEPATH, PORT);
+
+    std::optional<BeuroAI> beuro_exec = std::nullopt;
+
+    for(int i = 0; i < argc; i++){
+        if(static_cast<std::string>(argv[i]) == "-y"){
+            beuro_exec.emplace(FILEPATH, PORT);
+        }
+
+        if(static_cast<std::string>(argv[i]) == "-n"){
+            beuro_exec = std::nullopt;
+        }
+    }
+
+    if(beuro_exec.has_value()){
+        std::cout << "Beuro's AI is active" << std::endl;
+    } else{
+        std::cout << "Beuro's AI is not active" << std::endl;
+    }
+ 
     dpp::cluster beuro(BOT_TOKEN, dpp::i_default_intents | dpp::i_message_content);
 
     beuro.on_log(dpp::utility::cout_logger());
@@ -227,13 +221,8 @@ int main(int argc, char* argv[]){
         }
     });
 
-    beuro.on_message_create([&beuro, &beuro_exec, &beuro_setup](const dpp::message_create_t& event) -> dpp::task<void> {
-        if(!beuro_setup.is_on){
-            event.co_send("Written by Mithirilz: Sorry Beuro is sleeping right now\"");
-            co_return;
-        }
-
-        if (event.msg.author.id == 640069711341813763){
+    beuro.on_message_create([&beuro, &beuro_exec](const dpp::message_create_t& event) -> dpp::task<void> {
+        if(event.msg.author.id == 640069711341813763){
             co_await owner_message_commands(event, beuro, beuro_exec);
             co_return;
         }
@@ -258,28 +247,37 @@ int main(int argc, char* argv[]){
     beuro.start(dpp::st_wait);
 }
 
-dpp::task<void> owner_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro, BeuroAI& beuro_exec){
-    if(event.msg.content.find("<@" + std::to_string(beuro.me.id) + ">") != std::string::npos || event.msg.is_dm()) {
-        auto AI_ProcessingStart = beuro_exec.Beuro_Response(event.msg.content, event, beuro);
-        co_return;
-    }
-
-    else if(event.msg.content.find("Beuro shutdown") || event.msg.content.find("beuro shutdown") != std::string::npos){
-        auto storage_process = beuro_exec.store_memory(beuro);
+dpp::task<void> owner_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro, std::optional<BeuroAI>& beuro_exec){
+    if(event.msg.content.find("Beuro shutdown") != std::string::npos || event.msg.content.find("beuro shutdown") != std::string::npos){
+        auto storage_process = beuro_exec->store_memory(beuro);
         event.co_reply("Shutting down in a few seconds...");
         co_await storage_process;
         beuro.shutdown();
     }
+
+    if((event.msg.content.find("<@" + std::to_string(beuro.me.id) + ">") != std::string::npos || event.msg.is_dm()) && !beuro_exec.has_value()){
+        event.co_send("Note to Mithirilz: \"She's turned off dumbass\"");
+    }
+    
+    if((event.msg.content.find("<@" + std::to_string(beuro.me.id) + ">") != std::string::npos || event.msg.is_dm()) && beuro_exec.has_value()){
+        auto AI_ProcessingStart = beuro_exec->Beuro_Response(event.msg.content, event, beuro);
+        co_return;
+    }
 }
 
-dpp::task<void> general_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro, BeuroAI& beuro_exec){
-    if(event.msg.content.find("<@" + std::to_string(beuro.me.id) + ">") != std::string::npos && !event.msg.is_dm()){
-        auto AI_ProcessingStart = beuro_exec.Beuro_Response(event.msg.content, event, beuro);
+dpp::task<void> general_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro, std::optional<BeuroAI>& beuro_exec){
+    if(event.msg.content.find("Beuro shutdown") != std::string::npos || event.msg.content.find("beuro shutdown") != std::string::npos){
+        co_await event.co_reply("Written by Mithirilz: \"sybau\"");
         co_return;
     }
 
-    else if(event.msg.content.find("Beuro shutdown") != std::string::npos || event.msg.content.find("beuro shutdown") != std::string::npos){
-        co_await event.co_reply("Written by Mithirilz: \"sybau\"");
+    if(event.msg.content.find("<@" + std::to_string(beuro.me.id) + ">") != std::string::npos && !beuro_exec.has_value()){
+        event.co_send("Sorry! I'm being tinkered with currently...\n"
+                      "okay I have to go, my dad is telling me to stay still");
+    }
+
+    if(event.msg.content.find("<@" + std::to_string(beuro.me.id) + ">") != std::string::npos && !event.msg.is_dm() && beuro_exec.has_value()){
+        auto AI_ProcessingStart = beuro_exec->Beuro_Response(event.msg.content, event, beuro);
         co_return;
     }
 }
