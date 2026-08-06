@@ -249,7 +249,8 @@ int main(int argc, char* argv[]){
 
 dpp::task<void> owner_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro, std::optional<BeuroAI>& beuro_exec){
     const bool is_activate_shutdown = event.msg.content.find("Beuro shutdown") != std::string::npos || event.msg.content.find("beuro shutdown") != std::string::npos;
-    const bool is_activate_no_store_shutdown = event.msg.content.find("analysis mode: no-store shutdown") || event.msg.content.find("Analysis mode: no-store shutdown");
+    const bool is_activate_no_store_shutdown = event.msg.content.find("sleep mode: forced shutdown") != std::string::npos;
+    const bool is_querying_AI_activity = event.msg.content.find("analysis mode: beuro activity") != std::string::npos;
     const bool is_pinged = event.msg.content.find("<@" + std::to_string(beuro.me.id) + ">") != std::string::npos;
 
     if(is_activate_shutdown && beuro_exec.has_value()){
@@ -266,6 +267,14 @@ dpp::task<void> owner_message_commands(const dpp::message_create_t& event, dpp::
         beuro.shutdown();
 
         co_return;
+    }
+
+    if(is_querying_AI_activity){
+        if(beuro_exec.has_value()){
+            event.co_send("Analysis result: Beuro is awake");
+        } else{
+            event.co_send("Analysis result: Beuro is asleep");
+        }
     }
 
     if((is_pinged && !beuro_exec.has_value()) || (event.msg.is_dm() && !beuro_exec.has_value())){

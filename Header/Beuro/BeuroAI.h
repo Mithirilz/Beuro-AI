@@ -65,4 +65,3 @@ class BeuroAI{
         dpp::task<std::string> make_a_decision(const std::string user_message, const dpp::message_create_t& event, dpp::cluster& Beuro);
         dpp::job writeBeuro_ChatHistory(std::string beuro_chat, std::string user, std::string user_message);
 };
-
