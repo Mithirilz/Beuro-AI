@@ -249,7 +249,8 @@ int main(int argc, char* argv[]){
 }
 
 dpp::task<void> owner_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro, std::optional<BeuroAI>& beuro_exec){
-    const bool is_activate_shutdown = event.msg.content.find("Beuro shutdown") != std::string::npos || event.msg.content.find("beuro shutdown") != std::string::npos;
+    const bool is_activate_shutdown = event.msg.content.find("Beuro shutdown") != std::string::npos ||
+                                      event.msg.content.find("beuro shutdown") != std::string::npos;
     if(is_activate_shutdown && beuro_exec.has_value()){
         auto storage_process = beuro_exec->store_memory(beuro);
         event.co_reply("Shutting down in a few seconds...");
@@ -293,7 +294,8 @@ dpp::task<void> owner_message_commands(const dpp::message_create_t& event, dpp::
 }
 
 dpp::task<void> general_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro, std::optional<BeuroAI>& beuro_exec){
-    const bool is_activate_shutdown = event.msg.content.find("Beuro shutdown") != std::string::npos || event.msg.content.find("beuro shutdown") != std::string::npos;
+    const bool is_activate_shutdown = event.msg.content.find("Beuro shutdown") != std::string::npos ||
+                                      event.msg.content.find("beuro shutdown") != std::string::npos;
     if(is_activate_shutdown){
         event.co_reply("Written by Mithirilz: \"sybau\"");
         co_return;
