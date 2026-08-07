@@ -1,6 +1,7 @@
 #include "Beuro/BeuroAI.h"
 #include <dpp/dpp.h>
 #include <dotenv.h>
+#include <format>
 #include <optional>
 
 dpp::task<void> owner_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro, std::optional<BeuroAI>& beuro_exec);
@@ -310,6 +311,15 @@ dpp::task<void> general_message_commands(const dpp::message_create_t& event, dpp
 }
 
 dpp::job debugger(const dpp::slashcommand_t event){
-    std::cout << event.command.get_issuing_user().username << " issued a command." << std::endl;
+    const std::string command_name = event.command.get_command_name();
+    const std::string issued_user = event.command.get_issuing_user().username;
+    const std::string server_location = event.command.get_guild().name;
+
+    const std::string debug_print = std::format("Command location: {}\n"
+                                                "Command name: {}\n"
+                                                "User: {}\n\n", server_location, command_name, issued_user);
+
+    std::cout << debug_print;
+
     co_return;
 }
