@@ -317,7 +317,7 @@ dpp::job debugger(const dpp::slashcommand_t event){
 
     const std::string debug_print = std::format("Command location: {}\n"
                                                 "Command name: {}\n"
-                                                "User: {}\n\n", server_location, command_name, issued_user);
+                                                "User: {}\n", server_location, command_name, issued_user);
 
     std::cout << debug_print;
 
