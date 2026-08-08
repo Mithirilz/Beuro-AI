@@ -252,9 +252,8 @@ dpp::task<void> owner_message_commands(const dpp::message_create_t& event, dpp::
     const bool is_activate_shutdown = event.msg.content.find("Beuro shutdown") != std::string::npos ||
                                       event.msg.content.find("beuro shutdown") != std::string::npos;
     if(is_activate_shutdown && beuro_exec.has_value()){
-        auto storage_process = beuro_exec->store_memory(beuro);
         event.co_reply("Shutting down in a few seconds...");
-        co_await storage_process;
+        co_await beuro_exec->store_memory(beuro);
         beuro.shutdown();
 
         co_return;
@@ -275,6 +274,8 @@ dpp::task<void> owner_message_commands(const dpp::message_create_t& event, dpp::
         } else{
             event.co_send("Analysis result: Beuro is asleep");
         }
+        
+        co_return;
     }
 
     const bool is_pinged = event.msg.content.find("<@" + std::to_string(beuro.me.id) + ">") != std::string::npos;
@@ -284,12 +285,16 @@ dpp::task<void> owner_message_commands(const dpp::message_create_t& event, dpp::
         } else{
             event.co_send("Note to Mithirilz: She's sleeping sonion");
         }
+
+        co_return;
     } else if(event.msg.is_dm()){
         if(beuro_exec.has_value()){
             auto start_response = beuro_exec->Beuro_Response(event.msg.content, event, beuro);
         } else{
             event.co_send("Note to Mithirilz: She's sleeping sonion");
         }
+
+        co_return;
     }
 }
 
@@ -309,6 +314,8 @@ dpp::task<void> general_message_commands(const dpp::message_create_t& event, dpp
             event.co_send("Sorry! I'm being tinkered with currently...\n"
                           "okay I have to go, my dad is telling me to stay still");
         }
+
+    co_return;
     }
 }
 
