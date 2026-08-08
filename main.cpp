@@ -2,23 +2,42 @@
 #include "message.h"
 #include <dpp/dpp.h>
 #include <dotenv.h>
+#include <format>
+#include <optional>
 
-dpp::task<void> general_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro, BeuroAI& beuro_exec);
-dpp::task<void> owner_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro, BeuroAI& beuro_exec);
+dpp::task<void> owner_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro, std::optional<BeuroAI>& beuro_exec);
+dpp::task<void> general_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro, std::optional<BeuroAI>& beuro_exec);
 dpp::job debugger(const dpp::slashcommand_t event);
 
-int main() {
+int main(int argc, char* argv[]){
     dotenv::init();
     const std::string BOT_TOKEN = dotenv::getenv("BOT_TOKEN", "None");
     const std::string FILEPATH = dotenv::getenv("FILEPATH", "None");
     const std::string PORT = dotenv::getenv("PORT", "None");
-    
-    if (BOT_TOKEN == "None" || FILEPATH == "None" || PORT == "None"){
-        std::cout << "One of the Env's are not valid" << std::endl;
+
+    if(BOT_TOKEN == "None"){
+        std::cout << "Invalid bot token." << std::endl;
         return 0;
     }
-    
-    BeuroAI beuro_exec(FILEPATH, PORT);
+
+    std::optional<BeuroAI> beuro_exec = std::nullopt;
+
+    for(int i = 0; i < argc; i++){
+        if(static_cast<std::string>(argv[i]) == "-y"){
+            beuro_exec.emplace(FILEPATH, PORT);
+        }
+
+        if(static_cast<std::string>(argv[i]) == "-n"){
+            beuro_exec = std::nullopt;
+        }
+    }
+
+    if(beuro_exec.has_value()){
+        std::cout << "Beuro's AI is active" << std::endl;
+    } else{
+        std::cout << "Beuro's AI is not active" << std::endl;
+    }
+ 
     dpp::cluster beuro(BOT_TOKEN, dpp::i_default_intents | dpp::i_message_content);
 
     beuro.on_log(dpp::utility::cout_logger());
@@ -26,11 +45,6 @@ int main() {
     beuro.on_slashcommand([](const dpp::slashcommand_t& event)->dpp::task<void>{
         if (event.command.get_command_name() == "neuro"){
             co_await event.co_reply("https://cdn.discordapp.com/attachments/1072697081443131476/1439145564070740048/oo_ee_oo-1.mov?ex=692de380&is=692c9200&hm=c7eaedf245cf27b26b2e520a32b38d6d945c0e53f3ad1df93f66e7450977e89b&");
-            debugger(event);
-        }
-        
-        else if (event.command.get_command_name() == "ai_baby"){
-            co_await event.co_reply("https://images-ext-1.discordapp.net/external/eIJoIaL4bAbZi1LpCv7ZxwhyIYHDgut6OuDQ1lt6O0k/https/media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExaXc5cnRqa2YzcXM0N3l6amt2cjdqdDA4d3VuNGloMGg4bGg0a29tMSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/4tXCHa4BzNbeqsRNVv/giphy.gif?width=600&height=600");
             debugger(event);
         }
 
@@ -175,14 +189,12 @@ int main() {
         if (dpp::run_once<struct register_bot_commands>()){
             beuro.guild_bulk_command_create({
                 dpp::slashcommand("join", "Beuro VC test", beuro.me.id),
-                dpp::slashcommand("ai_baby", "golshi", beuro.me.id),
                 dpp::slashcommand("neuro", "im thinking neuro", beuro.me.id),
                 dpp::slashcommand("bot_inquiry", "What's the bot about?", beuro.me.id),
                 dpp::slashcommand("future_devs", "What is the future for the Euro Series?", beuro.me.id)
             }, dotenv::getenv("SERVER_ID2"));
 
             beuro.guild_bulk_command_create({
-                dpp::slashcommand("ai_baby", "golshi", beuro.me.id),
                 dpp::slashcommand("hex", "Hex the Kat", beuro.me.id),
                 dpp::slashcommand("join", "Beuro VC test", beuro.me.id),
                 dpp::slashcommand("neuro", "im thinking neuro", beuro.me.id),
@@ -193,7 +205,6 @@ int main() {
 
             beuro.guild_bulk_command_create({
                 dpp::slashcommand("join", "Beuro VC test", beuro.me.id),
-                dpp::slashcommand("ai_baby", "golshi", beuro.me.id),
                 dpp::slashcommand("hex", "Hex the Kat", beuro.me.id),
                 dpp::slashcommand("neuro", "im thinking neuro", beuro.me.id),
                 dpp::slashcommand("bot_inquiry", "What's the bot about?", beuro.me.id),
@@ -203,12 +214,8 @@ int main() {
         }
     });
 
-    beuro.on_message_create([&beuro, &beuro_exec](const dpp::message_create_t& event)-> dpp::task<void>{
-        if (event.msg.type != dpp::message_type::mt_reply){
-            auto AI_ProcessingStart = beuro_exec.Beuro_Response(event.msg.content, event, beuro);
-        }
-
-        if (event.msg.author.id == 640069711341813763){
+    beuro.on_message_create([&beuro, &beuro_exec](const dpp::message_create_t& event) -> dpp::task<void> {
+        if(event.msg.author.id == 640069711341813763){
             co_await owner_message_commands(event, beuro, beuro_exec);
             co_return;
         }
@@ -219,53 +226,100 @@ int main() {
         }
     });
 
-    beuro.on_voice_state_update([](const dpp::voice_state_update_t& event)-> dpp::task<void>{
-        dpp::snowflake Owners_ID = dotenv::getenv("OWNERS_ID");
-        auto GuildVC = dpp::find_guild(event.state.guild_id);
-        auto Mithirilz = GuildVC->voice_members.find(Owners_ID);
+    beuro.on_voice_state_update([](const dpp::voice_state_update_t& event){
+        dpp::snowflake Owners_ID = 640069711341813763;
+        dpp::guild* GuildVC = dpp::find_guild(event.state.guild_id);
 
-        if (Mithirilz == GuildVC->voice_members.end()){
+        if(GuildVC->voice_members.contains(Owners_ID)){
             event.from()->disconnect_voice(event.state.guild_id);
-            co_return;
+            return;
         }
     });
         
     beuro.start(dpp::st_wait);
 }
 
-dpp::task<void> owner_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro, BeuroAI& beuro_exec){
-    if(event.msg.content.find("<@" + std::to_string(beuro.me.id) + ">") != std::string::npos || event.msg.is_dm() || event.msg.type == dpp::message_type::mt_reply){
-        auto AI_ProcessingStart = beuro_exec.Beuro_Response(event.msg.content, event, beuro);
+dpp::task<void> owner_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro, std::optional<BeuroAI>& beuro_exec){
+    const bool is_activate_shutdown = event.msg.content.find("Beuro shutdown") != std::string::npos ||
+                                      event.msg.content.find("beuro shutdown") != std::string::npos;
+    if(is_activate_shutdown && beuro_exec.has_value()){
+        event.co_reply("Shutting down in a few seconds...");
+        co_await beuro_exec->store_memory(beuro);
+        beuro.shutdown();
+
         co_return;
     }
 
-    else if(event.msg.content.find("Beuro shutdown") || event.msg.content.find("beuro shutdown") != std::string::npos){
-        auto storage_process = beuro_exec.store_memory(beuro);
-        
-        event.co_reply("Shutting down in a few seconds...");
-        co_await storage_process;
-
+    const bool is_activate_no_store_shutdown = event.msg.content.find("sleep mode: forced shutdown") != std::string::npos;
+    if(is_activate_no_store_shutdown){
+        co_await event.co_send("Engaging forced shutdown");
         beuro.shutdown();
+
+        co_return;
+    }
+
+    const bool is_querying_AI_activity = event.msg.content.find("analysis mode: beuro activity") != std::string::npos;
+    if(is_querying_AI_activity){
+        if(beuro_exec.has_value()){
+            event.co_send("Analysis result: Beuro is awake");
+        } else{
+            event.co_send("Analysis result: Beuro is asleep");
+        }
+        
+        co_return;
+    }
+
+    const bool is_pinged = event.msg.content.find("<@" + std::to_string(beuro.me.id) + ">") != std::string::npos;
+    if(is_pinged){
+        if(beuro_exec.has_value()){
+            auto start_response = beuro_exec->Beuro_Response(event.msg.content, event, beuro);
+        } else{
+            event.co_send("Note to Mithirilz: She's sleeping sonion");
+        }
+
+        co_return;
+    } else if(event.msg.is_dm()){
+        if(beuro_exec.has_value()){
+            auto start_response = beuro_exec->Beuro_Response(event.msg.content, event, beuro);
+        } else{
+            event.co_send("Note to Mithirilz: She's sleeping sonion");
+        }
+
+        co_return;
     }
 }
 
-dpp::task<void> general_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro, BeuroAI& beuro_exec){
-    if(event.msg.is_dm()){
-        co_return;
-    }
-    
-    if(event.msg.content.find("<@" + std::to_string(beuro.me.id) + ">") != std::string::npos || event.msg.type == dpp::message_type::mt_reply){
-        auto AI_ProcessingStart = beuro_exec.Beuro_Response(event.msg.content, event, beuro);
+dpp::task<void> general_message_commands(const dpp::message_create_t& event, dpp::cluster& beuro, std::optional<BeuroAI>& beuro_exec){
+    const bool is_activate_shutdown = event.msg.content.find("Beuro shutdown") != std::string::npos ||
+                                      event.msg.content.find("beuro shutdown") != std::string::npos;
+    if(is_activate_shutdown){
+        event.co_reply("Written by Mithirilz: \"sybau\"");
         co_return;
     }
 
-    else if(event.msg.content.find("Beuro shutdown") != std::string::npos || event.msg.content.find("beuro shutdown") != std::string::npos){
-        event.co_reply("Written by Mithirilz: \"sybau\"");
+    const bool is_pinged = event.msg.content.find("<@" + std::to_string(beuro.me.id) + ">") != std::string::npos;
+    if(is_pinged){
+        if(beuro_exec.has_value()){
+            auto start_response = beuro_exec->Beuro_Response(event.msg.content, event, beuro);
+        } else{
+            event.co_send("Sorry! I'm being tinkered with currently...\n"
+                          "okay I have to go, my dad is telling me to stay still");
+        }
+
         co_return;
     }
 }
 
 dpp::job debugger(const dpp::slashcommand_t event){
-    std::cout << event.command.get_issuing_user().username << " issued a command." << std::endl;
+    const std::string command_name = event.command.get_command_name();
+    const std::string issued_user = event.command.get_issuing_user().username;
+    const std::string server_location = event.command.get_guild().name;
+
+    const std::string debug_print = std::format("Command location: {}\n"
+                                                "Command name: {}\n"
+                                                "User: {}\n", server_location, command_name, issued_user);
+
+    std::cout << debug_print;
+
     co_return;
 }
