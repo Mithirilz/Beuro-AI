@@ -46,11 +46,6 @@ int main(int argc, char* argv[]){
             co_await event.co_reply("https://cdn.discordapp.com/attachments/1072697081443131476/1439145564070740048/oo_ee_oo-1.mov?ex=692de380&is=692c9200&hm=c7eaedf245cf27b26b2e520a32b38d6d945c0e53f3ad1df93f66e7450977e89b&");
             debugger(event);
         }
-        
-        else if (event.command.get_command_name() == "ai_baby"){
-            co_await event.co_reply("https://images-ext-1.discordapp.net/external/eIJoIaL4bAbZi1LpCv7ZxwhyIYHDgut6OuDQ1lt6O0k/https/media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExaXc5cnRqa2YzcXM0N3l6amt2cjdqdDA4d3VuNGloMGg4bGg0a29tMSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/4tXCHa4BzNbeqsRNVv/giphy.gif?width=600&height=600");
-            debugger(event);
-        }
 
         else if (event.command.get_command_name() == "soyjack") {
             dpp::embed Soyjack;
@@ -194,14 +189,12 @@ int main(int argc, char* argv[]){
 
             beuro.guild_bulk_command_create({
                 dpp::slashcommand("join", "Beuro VC test", beuro.me.id),
-                dpp::slashcommand("ai_baby", "golshi", beuro.me.id),
                 dpp::slashcommand("neuro", "im thinking neuro", beuro.me.id),
                 dpp::slashcommand("bot_inquiry", "What's the bot about?", beuro.me.id),
                 dpp::slashcommand("future_devs", "What is the future for the Euro Series?", beuro.me.id)
             }, dotenv::getenv("SERVER_ID2"));
 
             beuro.guild_bulk_command_create({
-                dpp::slashcommand("ai_baby", "golshi", beuro.me.id),
                 dpp::slashcommand("hex", "Hex the Kat", beuro.me.id),
                 dpp::slashcommand("join", "Beuro VC test", beuro.me.id),
                 dpp::slashcommand("neuro", "im thinking neuro", beuro.me.id),
@@ -212,7 +205,6 @@ int main(int argc, char* argv[]){
 
             beuro.guild_bulk_command_create({
                 dpp::slashcommand("join", "Beuro VC test", beuro.me.id),
-                dpp::slashcommand("ai_baby", "golshi", beuro.me.id),
                 dpp::slashcommand("hex", "Hex the Kat", beuro.me.id),
                 dpp::slashcommand("neuro", "im thinking neuro", beuro.me.id),
                 dpp::slashcommand("bot_inquiry", "What's the bot about?", beuro.me.id),
