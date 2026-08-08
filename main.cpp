@@ -228,10 +228,9 @@ int main(int argc, char* argv[]){
 
     beuro.on_voice_state_update([](const dpp::voice_state_update_t& event){
         dpp::snowflake Owners_ID = 640069711341813763;
-        auto GuildVC = dpp::find_guild(event.state.guild_id);
-        auto Mithirilz = GuildVC->voice_members.find(Owners_ID);
+        dpp::guild* GuildVC = dpp::find_guild(event.state.guild_id);
 
-        if (Mithirilz == GuildVC->voice_members.end()){
+        if(GuildVC->voice_members.contains(Owners_ID)){
             event.from()->disconnect_voice(event.state.guild_id);
             return;
         }
