@@ -219,7 +219,7 @@ int main(int argc, char* argv[]){
         dpp::snowflake Owners_ID = 640069711341813763;
         dpp::guild* GuildVC = dpp::find_guild(event.state.guild_id);
 
-        if(GuildVC->voice_members.contains(Owners_ID)){
+        if(!GuildVC->voice_members.contains(Owners_ID)){
             event.from()->disconnect_voice(event.state.guild_id);
             return;
         }
