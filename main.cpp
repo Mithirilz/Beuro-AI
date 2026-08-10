@@ -1,4 +1,5 @@
 #include "Beuro/BeuroAI.h"
+#include "dispatcher.h"
 #include "message.h"
 #include <dpp/dpp.h>
 #include <dotenv.h>
@@ -315,11 +316,10 @@ dpp::job debugger(const dpp::slashcommand_t event){
     const std::string issued_user = event.command.get_issuing_user().username;
     const std::string server_location = event.command.get_guild().name;
 
-    const std::string debug_print = std::format("Command location: {}\n"
-                                                "Command name: {}\n"
-                                                "User: {}\n", server_location, command_name, issued_user);
+    std::cout << std::format("Command location: {}\n"
+                             "Command name: {}\n"
+                             "User: {}\n", server_location, command_name, issued_user);
 
-    std::cout << debug_print;
 
     co_return;
 }
