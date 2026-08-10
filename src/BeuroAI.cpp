@@ -11,7 +11,7 @@ BeuroAI::BeuroAI(const std::string& FILEPATH, const std::string& PORT) : m_chrom
     int NumberofIDs = m_sqlexec.getNumberofIDs();
     std::cout << NumberofIDs << std::endl;
 
-    if (NumberofIDs != 0){
+    if(NumberofIDs != 0){
         m_is_decider_active = [this](const std::string &user_message, const dpp::message_create_t &event, dpp::cluster &Beuro)->dpp::task<std::string>{
             return make_a_decision(user_message, event, Beuro);
         };
@@ -132,19 +132,19 @@ dpp::task<void> BeuroAI::store_memory(dpp::cluster& Beuro){
     std::string next_prompt;
 
     //Refine summary 3 times before completely shutting down
-    for (int i = 0; i < NUMBER_OF_SUMMARIES; i++) {
+    for(int i = 0; i < NUMBER_OF_SUMMARIES; i++){
         auto result = co_await Beuro.co_request(
         "http://127.0.0.1:11434/api/chat",
         dpp::m_post,
         message_to_send.dump(),
         "application/json");
 
-        if (result.status != 200){
+        if(result.status != 200){
             std::cout << "Memory storage failed" << std::endl;
             break;
         }
 
-        if (result.body.find("NULL") != std::string::npos){
+        if(result.body.find("NULL") != std::string::npos){
             break;
         }
 
