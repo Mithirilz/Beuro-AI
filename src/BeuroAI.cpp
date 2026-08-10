@@ -258,7 +258,7 @@ dpp::task<void> BeuroAI::Beuro_Response(std::string user_message, const dpp::mes
     }
 
     std::cout << final_message << std::endl;
-    std::cout << "Beuro: " + beuro_response << std::endl;
+    std::cout << std::format("Beuro: {}", beuro_response)<< std::endl;
     std::cout << "__________________________________" << std::endl;
     
     savetxtfile_chat_history(beuro_response, event.msg.author.username, user_message);
