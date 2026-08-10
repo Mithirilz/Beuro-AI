@@ -159,14 +159,10 @@ int main(int argc, char* argv[]){
 
             if(!guild->connect_member_voice(*event.owner, event.command.get_issuing_user().id, false, true)){
                 co_await event.co_reply("Failed to join VC...");
-            }
-
-            else if(event.command.get_issuing_user().id == 640069711341813763){
+            } else if(event.command.get_issuing_user().id == 640069711341813763){
                 co_await event.co_reply("Hey there Creator");
                 debugger(event);
-            }
-
-            else{
+            } else{
                 co_await event.co_reply("Hey there random person");
                 debugger(event);
             }
