@@ -44,12 +44,10 @@ int main(int argc, char* argv[]){
     beuro.on_log(dpp::utility::cout_logger());
     
     beuro.on_slashcommand([](const dpp::slashcommand_t& event)->dpp::task<void>{
-        if (event.command.get_command_name() == "neuro"){
+        if(event.command.get_command_name() == "neuro"){
             co_await event.co_reply("https://cdn.discordapp.com/attachments/1072697081443131476/1439145564070740048/oo_ee_oo-1.mov?ex=692de380&is=692c9200&hm=c7eaedf245cf27b26b2e520a32b38d6d945c0e53f3ad1df93f66e7450977e89b&");
             debugger(event);
-        }
-
-        else if (event.command.get_command_name() == "soyjack"){
+        } else if(event.command.get_command_name() == "soyjack"){
             dpp::embed Soyjack;
             
             Soyjack
@@ -64,9 +62,7 @@ int main(int argc, char* argv[]){
 
             co_await event.co_reply(msg);
             debugger(event);
-        }
-
-        else if (event.command.get_command_name() == "hex"){
+        } else if(event.command.get_command_name() == "hex"){
             dpp::embed Hex;
 
             Hex
@@ -84,9 +80,7 @@ int main(int argc, char* argv[]){
 
             co_await event.co_reply(msg);
             debugger(event);
-        }
-
-        else if (event.command.get_command_name() == "bot_inquiry"){
+        } else if(event.command.get_command_name() == "bot_inquiry"){
             dpp::embed Beuro;
             
             Beuro
@@ -123,9 +117,7 @@ int main(int argc, char* argv[]){
 
             co_await event.co_reply(msg);
             debugger(event);    
-        }
-
-        else if (event.command.get_command_name() == "future_devs"){
+        } else if(event.command.get_command_name() == "future_devs"){
             dpp::embed Explanation;
 
             Explanation
@@ -162,9 +154,7 @@ int main(int argc, char* argv[]){
             dpp::message msg(event.command.channel_id, Explanation);
             co_await event.co_reply(msg);
             debugger(event);    
-        }
-
-        else if(event.command.get_command_name() == "join"){
+        } else if(event.command.get_command_name() == "join"){
             dpp::guild* guild = dpp::find_guild(event.command.guild_id);
 
             if(!guild->connect_member_voice(*event.owner, event.command.get_issuing_user().id, false, true)){
@@ -219,9 +209,7 @@ int main(int argc, char* argv[]){
         if(event.msg.author.id == 640069711341813763){
             co_await owner_message_commands(event, beuro, beuro_exec);
             co_return;
-        }
-        
-        else{
+        } else{
             co_await general_message_commands(event, beuro, beuro_exec);
             co_return;
         }
