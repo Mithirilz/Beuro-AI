@@ -43,7 +43,7 @@ int main(int argc, char* argv[]){
     
     beuro.on_slashcommand([](const dpp::slashcommand_t& event)->dpp::task<void>{
         if(event.command.get_command_name() == "neuro"){
-            co_await event.co_reply("https://cdn.discordapp.com/attachments/1072697081443131476/1439145564070740048/oo_ee_oo-1.mov?ex=692de380&is=692c9200&hm=c7eaedf245cf27b26b2e520a32b38d6d945c0e53f3ad1df93f66e7450977e89b&");
+            event.co_reply("https://cdn.discordapp.com/attachments/1072697081443131476/1439145564070740048/oo_ee_oo-1.mov?ex=692de380&is=692c9200&hm=c7eaedf245cf27b26b2e520a32b38d6d945c0e53f3ad1df93f66e7450977e89b&");
             debugger(event);
         } else if(event.command.get_command_name() == "soyjack"){
             dpp::embed Soyjack;
@@ -58,7 +58,7 @@ int main(int argc, char* argv[]){
                 );
             dpp::message msg (event.command.channel_id, Soyjack);
 
-            co_await event.co_reply(msg);
+            event.co_reply(msg);
             debugger(event);
         } else if(event.command.get_command_name() == "hex"){
             dpp::embed Hex;
@@ -76,7 +76,7 @@ int main(int argc, char* argv[]){
 
             dpp::message msg(event.command.channel_id, Hex);
 
-            co_await event.co_reply(msg);
+            event.co_reply(msg);
             debugger(event);
         } else if(event.command.get_command_name() == "bot_inquiry"){
             dpp::embed Beuro;
@@ -113,7 +113,7 @@ int main(int argc, char* argv[]){
 
             dpp::message msg(event.command.channel_id, Beuro);
 
-            co_await event.co_reply(msg);
+            event.co_reply(msg);
             debugger(event);    
         } else if(event.command.get_command_name() == "future_devs"){
             dpp::embed Explanation;
@@ -150,18 +150,18 @@ int main(int argc, char* argv[]){
                 .set_timestamp(time(0));
 
             dpp::message msg(event.command.channel_id, Explanation);
-            co_await event.co_reply(msg);
+            event.co_reply(msg);
             debugger(event);    
         } else if(event.command.get_command_name() == "join"){
             dpp::guild* guild = dpp::find_guild(event.command.guild_id);
 
             if(!guild->connect_member_voice(*event.owner, event.command.get_issuing_user().id, false, true)){
-                co_await event.co_reply("Failed to join VC...");
+                event.co_reply("Failed to join VC...");
             } else if(event.command.get_issuing_user().id == 640069711341813763){
-                co_await event.co_reply("Hey there Creator");
+                event.co_reply("Hey there Creator");
                 debugger(event);
             } else{
-                co_await event.co_reply("Hey there random person");
+                event.co_reply("Hey there random person");
                 debugger(event);
             }
         }
