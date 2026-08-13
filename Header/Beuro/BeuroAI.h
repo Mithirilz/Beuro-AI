@@ -52,7 +52,7 @@ class BeuroAI{
         BeuroAI(const std::string& FILEPATH, const std::string& PORT);
         
         dpp::task<void> manage_task_queue(std::string user_message, const dpp::message_create_t& event, dpp::cluster& Beuro);
-        dpp::task<void> Beuro_Response(std::string user_message, const dpp::message_create_t& event, dpp::cluster& Beuro);
+        dpp::job Beuro_Response(std::string user_message, const dpp::message_create_t event, dpp::cluster& Beuro);
         dpp::task<std::string> initiate_act(const std::string& DECISION, const std::string& content_message);
         dpp::task<void> store_memory(dpp::cluster& Beuro);
         dpp::task<std::string> make_a_decision(const std::string user_message, const dpp::message_create_t& event, dpp::cluster& Beuro);

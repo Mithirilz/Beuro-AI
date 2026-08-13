@@ -175,7 +175,7 @@ dpp::task<void> BeuroAI::store_memory(dpp::cluster& Beuro){
     co_return;
 }
 
-dpp::task<void> BeuroAI::Beuro_Response(std::string user_message, const dpp::message_create_t& event, dpp::cluster& Beuro){
+dpp::job BeuroAI::Beuro_Response(std::string user_message, const dpp::message_create_t event, dpp::cluster& Beuro){
     dpp::async typing_status = Beuro.co_channel_typing(event.msg.channel_id);
     dpp::task<std::string> decision_task;
     

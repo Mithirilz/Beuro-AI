@@ -255,7 +255,7 @@ dpp::task<void> owner_message_commands(const dpp::message_create_t& event, dpp::
     const bool is_pinged = event.msg.content.find("<@" + std::to_string(beuro.me.id) + ">") != std::string::npos;
     if(is_pinged){
         if(beuro_exec.has_value()){
-            auto start_response = beuro_exec->Beuro_Response(event.msg.content, event, beuro);
+            beuro_exec->Beuro_Response(event.msg.content, event, beuro);
         } else{
             event.co_send("Note to Mithirilz: She's sleeping sonion");
         }
@@ -263,7 +263,7 @@ dpp::task<void> owner_message_commands(const dpp::message_create_t& event, dpp::
         co_return;
     } else if(event.msg.is_dm()){
         if(beuro_exec.has_value()){
-            auto start_response = beuro_exec->Beuro_Response(event.msg.content, event, beuro);
+            beuro_exec->Beuro_Response(event.msg.content, event, beuro);
         } else{
             event.co_send("Note to Mithirilz: She's sleeping sonion");
         }
@@ -283,7 +283,7 @@ dpp::task<void> general_message_commands(const dpp::message_create_t& event, dpp
     const bool is_pinged = event.msg.content.find("<@" + std::to_string(beuro.me.id) + ">") != std::string::npos;
     if(is_pinged){
         if(beuro_exec.has_value()){
-            auto start_response = beuro_exec->Beuro_Response(event.msg.content, event, beuro);
+            beuro_exec->Beuro_Response(event.msg.content, event, beuro);
         } else{
             event.co_send("Sorry! I'm being tinkered with currently...\n"
                           "okay I have to go, my dad is telling me to stay still");
