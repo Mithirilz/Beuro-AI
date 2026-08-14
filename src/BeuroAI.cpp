@@ -90,9 +90,7 @@ dpp::task<std::string> BeuroAI::initiate_act(const std::string& DECISION, const 
     if(DECISION == "NOTHING"){
         std::cout << "Beuro did NOTHING" << std::endl;
         co_return content_message;
-    }
-
-    else if(DECISION == "RETRIEVE MEMORY"){
+    } else if(DECISION == "RETRIEVE MEMORY"){
         std::cout << "Beuro ENGAGED RAG (RETRIEVAL)" << std::endl;
 
         m_sqlexec.GetIDTargets(
@@ -102,9 +100,7 @@ dpp::task<std::string> BeuroAI::initiate_act(const std::string& DECISION, const 
         const std::string final_message = "[Context/Memory]:\n" + m_sqlexec.GetInformationFromIDTargets() + "\n\n" + content_message;
 
         co_return final_message;
-    }
-
-    else{
+    } else{
         std::cout << "Beuro made an INVALID DECISION" << std::endl; 
         co_return content_message;
     }
